@@ -1,0 +1,9 @@
+[project]
+name = "mypackage"
+version = "0.0.1"
+dependencies = [
+    "jupyter",
+    "matplotlib",
+    "numpy",
+    "torch",
+]
