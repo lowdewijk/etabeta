@@ -1,6 +1,8 @@
 import {useState} from 'react';
+import {useMutation} from 'react-query';
 import {useParams} from 'react-router-dom';
-import {Box, Button, TextField} from '@mui/material';
+import {Box, Button, CircularProgress, TextField} from '@mui/material';
+import axios from 'axios';
 
 const asideMainCommonStyles = {
   minHeight: '300px',
@@ -11,14 +13,36 @@ const asideMainCommonStyles = {
   fontWeight: 'bold',
 };
 
+interface Message {
+  message: string;
+  username: string;
+}
+
+const sendMessage = async (message: Message) => {
+  return axios.post(
+    `http://localhost:8000/session/{sessionID}/message`,
+    message,
+  );
+};
+
 export const Session = () => {
   const params = useParams();
   const sessionID = params['id'];
 
   const [message, setMessage] = useState('');
 
+  const {mutate, isLoading} = useMutation(sendMessage, {
+    onSuccess: data => {
+      console.log(data);
+      alert('message sent');
+    },
+    onError: () => {
+      alert('there was an error');
+    },
+  });
+
   function onSend(): void {
-    alert(`Sending message: ${message}`);
+    mutate({message, username: 'test'});
   }
 
   return (
@@ -86,9 +110,17 @@ export const Session = () => {
           onChange={event => {
             setMessage(event.target.value);
           }}
+          onKeyDown={event => {
+            const modifierKeyWasPressed = event.metaKey || event.ctrlKey;
+            const enterWasPressed = event.key === 'Enter';
+            if (modifierKeyWasPressed && enterWasPressed) {
+              event.preventDefault();
+              onSend();
+            }
+          }}
         />
         <Button variant="contained" onClick={onSend}>
-          Send
+          {isLoading ? <CircularProgress /> : 'Send'}
         </Button>
       </Box>
     </Box>
