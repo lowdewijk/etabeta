@@ -1,7 +1,8 @@
-import {FC, useState} from 'react';
-import {useMutation} from 'react-query';
-import {Box, Button, CircularProgress, TextField} from '@mui/material';
-import axios from 'axios';
+import {FC} from 'react';
+import {Box} from '@mui/material';
+
+import {ChatDisplay} from './ChatDisplay';
+import {ChatInput} from './ChatInput';
 
 const asideMainCommonStyles = {
   minHeight: '300px',
@@ -12,43 +13,11 @@ const asideMainCommonStyles = {
   fontWeight: 'bold',
 };
 
-interface Message {
-  sessionID: number;
-  message: string;
-  username: string;
-}
-
-const sendMessage = async (message: Message) => {
-  return axios.post(
-    `http://localhost:8000/api/session/${message.sessionID}`,
-    message,
-  );
-};
-
 export interface SessionProps {
-  id: number;
+  sessionID: string;
 }
 
-export const Session: FC<SessionProps> = ({id}) => {
-  const [message, setMessage] = useState('');
-
-  const {mutate, isLoading} = useMutation(sendMessage, {
-    onSuccess: data => {
-      alert('message sent');
-    },
-    onError: (error: Error) => {
-      alert('there was an error: ' + error.message);
-    },
-  });
-
-  function onSend(): void {
-    mutate({
-      sessionID: id,
-      message,
-      username: 'test',
-    });
-  }
-
+export const Session: FC<SessionProps> = ({sessionID}) => {
   return (
     <Box
       sx={{
@@ -76,7 +45,7 @@ export const Session: FC<SessionProps> = ({id}) => {
           padding: '0 16px',
         }}
       >
-        Welcome to session {id}
+        Welcome to session {sessionID}
       </Box>
       <Box
         component="main"
@@ -86,7 +55,7 @@ export const Session: FC<SessionProps> = ({id}) => {
         }}
       >
         <Box display="flex" flexWrap="wrap" gap={2}>
-          chat area
+          <ChatDisplay sessionID={sessionID} />
         </Box>
       </Box>
       <Box
@@ -108,24 +77,7 @@ export const Session: FC<SessionProps> = ({id}) => {
           padding: '0 16px',
         }}
       >
-        <TextField
-          variant="standard"
-          fullWidth
-          onChange={event => {
-            setMessage(event.target.value);
-          }}
-          onKeyDown={event => {
-            const modifierKeyWasPressed = event.metaKey || event.ctrlKey;
-            const enterWasPressed = event.key === 'Enter';
-            if (modifierKeyWasPressed && enterWasPressed) {
-              event.preventDefault();
-              onSend();
-            }
-          }}
-        />
-        <Button variant="contained" onClick={onSend}>
-          {isLoading ? <CircularProgress /> : 'Send'}
-        </Button>
+        <ChatInput sessionID={sessionID} />
       </Box>
     </Box>
   );
