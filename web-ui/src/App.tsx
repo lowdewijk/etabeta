@@ -4,7 +4,7 @@ import {BrowserRouter} from 'react-router-dom';
 import {createTheme, ThemeProvider} from '@mui/material/styles';
 
 import AppGlobalStyles from 'src/AppGlobalStyles';
-import {AppRoutes} from './AppRoutes';
+import {AppRoutes} from './routes/AppRoutes';
 
 const theme = createTheme();
 

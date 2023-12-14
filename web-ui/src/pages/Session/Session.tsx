@@ -1,6 +1,5 @@
-import {useState} from 'react';
+import {FC, useState} from 'react';
 import {useMutation} from 'react-query';
-import {useParams} from 'react-router-dom';
 import {Box, Button, CircularProgress, TextField} from '@mui/material';
 import axios from 'axios';
 
@@ -14,35 +13,40 @@ const asideMainCommonStyles = {
 };
 
 interface Message {
+  sessionID: number;
   message: string;
   username: string;
 }
 
 const sendMessage = async (message: Message) => {
   return axios.post(
-    `http://localhost:8000/session/{sessionID}/message`,
+    `http://localhost:8000/api/session/${message.sessionID}`,
     message,
   );
 };
 
-export const Session = () => {
-  const params = useParams();
-  const sessionID = params['id'];
+export interface SessionProps {
+  id: number;
+}
 
+export const Session: FC<SessionProps> = ({id}) => {
   const [message, setMessage] = useState('');
 
   const {mutate, isLoading} = useMutation(sendMessage, {
     onSuccess: data => {
-      console.log(data);
       alert('message sent');
     },
-    onError: () => {
-      alert('there was an error');
+    onError: (error: Error) => {
+      alert('there was an error: ' + error.message);
     },
   });
 
   function onSend(): void {
-    mutate({message, username: 'test'});
+    mutate({
+      sessionID: id,
+      message,
+      username: 'test',
+    });
   }
 
   return (
@@ -72,7 +76,7 @@ export const Session = () => {
           padding: '0 16px',
         }}
       >
-        Welcome to session {sessionID}
+        Welcome to session {id}
       </Box>
       <Box
         component="main"
