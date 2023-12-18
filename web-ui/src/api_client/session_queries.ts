@@ -4,7 +4,10 @@ import {toast} from 'react-toastify';
 import {
   createSession as clientCreateSession,
   deleteSession as clientDeleteSession,
+  getMessages,
   listSessions,
+  Message,
+  sendMessage,
 } from 'src/api_client/session';
 
 export const useListSessions = () => {
@@ -35,4 +38,21 @@ export const useDeleteSession = () => {
       await client.invalidateQueries({queryKey: ['sessions']});
     },
   });
+};
+
+export const useSendMessage = (sessionID: string) => {
+  const client = useQueryClient();
+
+  return useMutation((message: Message) => sendMessage(sessionID, message), {
+    onError: (error: Error) => {
+      toast.error('Error sending message: ' + error.message);
+    },
+    onSuccess: async () => {
+      await client.invalidateQueries({queryKey: ['messages']});
+    },
+  });
+};
+
+export const useGetSessionMessages = (sessionID: string) => {
+  return useQuery(['messages', sessionID], () => getMessages(sessionID), {});
 };

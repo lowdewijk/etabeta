@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import HTTPException
+import pickle
 
 
 app = FastAPI()
@@ -37,7 +38,35 @@ class Session():
     def get_session_id(self):
         return self.session_id
 
-sessions = {}
+class Sessions():
+    def __init__(self):
+        self.sessions = {}
+
+    def create_session(self, session: Session):
+        self.sessions[session.get_session_id()] = session
+
+    def get_session(self, session_id: str):
+        return self.sessions.get(session_id)
+
+    def delete_session(self, session_id: str):
+        del self.sessions[session_id]
+
+    def get_session_ids(self):
+        return self.sessions.keys()
+
+    def save(self):
+        with open('sessions.pickle', 'wb') as handle:
+            pickle.dump(self.sessions, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    
+    def load(self):
+        try:
+            with open('sessions.pickle', 'rb') as handle:
+                self.sessions = pickle.load(handle)
+        except FileNotFoundError:
+            return
+
+sessions = Sessions()
+sessions.load()
 
 class CreateSession(BaseModel):    
     sessionID: str
@@ -45,44 +74,49 @@ class CreateSession(BaseModel):
 @app.post("/api/session/")
 def create_session(session: CreateSession):
     session_id = session.sessionID
-    if session_id not in sessions:
-        sessions[session_id] = Session(session.sessionID)
+    if sessions.get_session(session_id) is None:
+        sessions.create_session(Session(session_id))
     else:
         raise HTTPException(status_code=400, detail=f"Session '{session_id}' already exists.")
 
     print(f"Session '{session_id}' created")
+    sessions.save()
+
     return {"session_id": session_id}    
 
 @app.delete("/api/session/{session_id}")
 def delete_session(session_id: str):
     print(f"Session '{session_id}' deleted")
 
-    if session_id in sessions:
-        del sessions[session_id]
+    if sessions.get_session(session_id) is None:
+        sessions.delete_sessions()
     else:
-        raise HTTPException(status_code=404, detail="Session not found")
+        raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found")
 
     return {"session_id": session_id}
 
 @app.get("/api/session/")
 def list_sessions():
-    sessions_list = [{"id": id} for id in sessions.keys()]
-    return sessions_list
+    return [{"id": id} for id in sessions.get_session_ids()]
 
 @app.get("/api/session/{session_id}/messages")
 def read_messages(session_id: str):
-    session = sessions.get(session_id)
+    session = sessions.get_session(session_id)
     if session is None:
-        raise HTTPException(status_code=404, detail="Session not found")
+        raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found")
+    sessions.save()
     return {"session_id": session_id, "messages": session.get_messages()}
 
-@app.post("/api/session/{session_id}/send")
+@app.post("/api/session/{session_id}/send_message")
 def send_message(session_id: str, message: Message):
     print(f"Received message: {message.message} from {message.username}")
 
-    if session_id not in sessions:
-        sessions[session_id] = Session(session_id)
-    sessions[session_id].add_message(message)
+    session = sessions.get_session(session_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found")
+
+    session.add_message(message)
+    sessions.save()
 
     return {"session_id": session_id}
 

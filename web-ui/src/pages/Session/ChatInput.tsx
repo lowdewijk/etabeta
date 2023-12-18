@@ -1,9 +1,7 @@
 import {FC, useState} from 'react';
-import {useMutation} from 'react-query';
-import {toast} from 'react-toastify';
 import {Button, CircularProgress, TextField} from '@mui/material';
 
-import {Message, sendMessage} from 'src/api_client/session';
+import {useSendMessage} from 'src/api_client/session_queries';
 
 export type ChatInputProps = {
   sessionID: string;
@@ -12,17 +10,10 @@ export type ChatInputProps = {
 export const ChatInput: FC<ChatInputProps> = ({sessionID}) => {
   const [message, setMessage] = useState('');
 
-  const {mutate, isLoading} = useMutation(
-    (msg: Message) => sendMessage(sessionID, msg),
-    {
-      onError: (error: Error) => {
-        toast.error('Error sending message: ' + error.message);
-      },
-    },
-  );
+  const {mutate: sendMessage, isLoading} = useSendMessage(sessionID);
 
   function onSend(): void {
-    mutate({
+    sendMessage({
       message,
       username: 'test',
     });

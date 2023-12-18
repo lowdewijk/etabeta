@@ -1,8 +1,7 @@
 import {FC} from 'react';
-import {useQuery} from 'react-query';
 import {CircularProgress} from '@mui/material';
 
-import {getMessages} from 'src/api_client/session';
+import {useGetSessionMessages} from 'src/api_client/session_queries';
 import {ErrorContainer} from 'src/components/Error/ErrorContainer';
 
 export type ChatDisplayProps = {
@@ -10,11 +9,7 @@ export type ChatDisplayProps = {
 };
 
 export const ChatDisplay: FC<ChatDisplayProps> = ({sessionID}) => {
-  const {
-    data: messages,
-    isError,
-    isLoading,
-  } = useQuery(['messages', sessionID], () => getMessages(sessionID), {});
+  const {data: messages, isError, isLoading} = useGetSessionMessages(sessionID);
 
   return (
     <div>

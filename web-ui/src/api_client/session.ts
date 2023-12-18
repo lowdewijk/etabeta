@@ -24,17 +24,19 @@ export type Message = {
 
 export const sendMessage = async (sessionID: string, message: Message) => {
   return axios.post(
-    `http://localhost:8000/api/session/${sessionID}/message`,
+    `http://localhost:8000/api/session/${sessionID}/send_message`,
     message,
   );
 };
 
 type GetMessages = {
   sessionID: string;
-  messages: Message[];
+  messages: Array<Message>;
 };
 
-export const getMessages = async (sessionID: string) => {
+export const getMessages = async (
+  sessionID: string,
+): Promise<Array<Message>> => {
   const response = await axios.get<GetMessages>(
     `http://localhost:8000/api/session/${sessionID}/messages`,
   );

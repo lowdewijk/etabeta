@@ -6,6 +6,7 @@ import {
   useDeleteSession,
   useListSessions,
 } from 'src/api_client/session_queries';
+import {ErrorContainer} from 'src/components/Error/ErrorContainer';
 
 export const Main = () => {
   const {data: sessions, isError, isLoading} = useListSessions();
@@ -31,7 +32,7 @@ export const Main = () => {
             <CircularProgress />
           </div>
         ) : isError ? (
-          <div>Error loading sessions.</div>
+          <ErrorContainer>Error loading sessions.</ErrorContainer>
         ) : (
           sessions?.map((session, idx) => (
             <li key={idx}>
