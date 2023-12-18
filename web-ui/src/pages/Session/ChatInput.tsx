@@ -8,6 +8,7 @@ export type ChatInputProps = {
 };
 
 export const ChatInput: FC<ChatInputProps> = ({sessionID}) => {
+  const [username, setUsername] = useState('');
   const [message, setMessage] = useState('');
 
   const {mutate: sendMessage, isLoading} = useSendMessage(sessionID);
@@ -15,15 +16,26 @@ export const ChatInput: FC<ChatInputProps> = ({sessionID}) => {
   function onSend(): void {
     sendMessage({
       message,
-      username: 'test',
+      username,
     });
+    setMessage('');
   }
 
   return (
     <>
       <TextField
         variant="standard"
+        placeholder="username"
+        value={username}
+        onChange={event => {
+          setUsername(event.target.value);
+        }}
+      />
+      &nbsp;
+      <TextField
+        variant="standard"
         fullWidth
+        value={message}
         onChange={event => {
           setMessage(event.target.value);
         }}

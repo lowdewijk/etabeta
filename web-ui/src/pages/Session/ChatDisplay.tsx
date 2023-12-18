@@ -1,5 +1,5 @@
 import {FC} from 'react';
-import {CircularProgress} from '@mui/material';
+import {Box, CircularProgress} from '@mui/material';
 
 import {useGetSessionMessages} from 'src/api_client/session_queries';
 import {ErrorContainer} from 'src/components/Error/ErrorContainer';
@@ -12,7 +12,13 @@ export const ChatDisplay: FC<ChatDisplayProps> = ({sessionID}) => {
   const {data: messages, isError, isLoading} = useGetSessionMessages(sessionID);
 
   return (
-    <div>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+      }}
+    >
       {isLoading ? (
         <div>
           Loading messages: <CircularProgress />
@@ -21,10 +27,14 @@ export const ChatDisplay: FC<ChatDisplayProps> = ({sessionID}) => {
         <ErrorContainer>Error loading messages.</ErrorContainer>
       ) : (
         messages?.map((message, idx) => (
-          <div key={idx}>
-            <div>{message.username}</div>
-            <div>{message.message}</div>
-          </div>
+          <Box
+            key={idx}
+            sx={{p: 1, m: 1, bgcolor: 'background.paper', borderRadius: 1}}
+          >
+            <div style={{textAlign: 'left'}}>
+              {message.username} : {message.message}
+            </div>
+          </Box>
         ))
       )}
     </div>
