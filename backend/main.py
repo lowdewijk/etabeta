@@ -45,17 +45,17 @@ class CreateSession(BaseModel):
 @app.post("/api/session/")
 def create_session(session: CreateSession):
     session_id = session.sessionID
-    if sessionID not in sessions:
-        sessions[sessionID] = Session(session.sessionID)
+    if session_id not in sessions:
+        sessions[session_id] = Session(session.sessionID)
     else:
-        raise HTTPException(status_code=400, detail=f"Session {sessionID} already exists.")
+        raise HTTPException(status_code=400, detail=f"Session '{session_id}' already exists.")
 
-    print(f"Session {session_id} created")
+    print(f"Session '{session_id}' created")
     return {"session_id": session_id}    
 
 @app.delete("/api/session/{session_id}")
 def delete_session(session_id: str):
-    print(f"Session {session_id} deleted")
+    print(f"Session '{session_id}' deleted")
 
     if session_id in sessions:
         del sessions[session_id]
@@ -63,6 +63,11 @@ def delete_session(session_id: str):
         raise HTTPException(status_code=404, detail="Session not found")
 
     return {"session_id": session_id}
+
+@app.get("/api/session/")
+def list_sessions():
+    sessions_list = [{"id": id} for id in sessions.keys()]
+    return sessions_list
 
 @app.get("/api/session/{session_id}/messages")
 def read_messages(session_id: str):
