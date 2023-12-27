@@ -31,6 +31,12 @@ const devSpecificConfig: Configuration = {
     port: 4000,
     open: true,
     hot: true,
+    proxy: {
+      '/api': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+      },
+    },
   },
 };
 

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import HTTPException
 
 import sessions_route
 import session_route
@@ -8,7 +8,7 @@ import session_route
 app = FastAPI()
 
 origins = [
-    "http://localhost:4000", # for development
+    "*", # for development
 ]
 
 app.add_middleware(
@@ -20,5 +20,6 @@ app.add_middleware(
 )
 
 
+app.mount("/static", StaticFiles(directory="static", html=True), name="static")
 app.include_router(sessions_route.router)
 app.include_router(session_route.router)

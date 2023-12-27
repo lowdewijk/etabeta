@@ -1,6 +1,6 @@
 import {memo} from 'react';
 import {QueryClient, QueryClientProvider} from 'react-query';
-import {BrowserRouter} from 'react-router-dom';
+import {HashRouter} from 'react-router-dom';
 import {ToastContainer} from 'react-toastify';
 import {createTheme, ThemeProvider} from '@mui/material/styles';
 
@@ -15,13 +15,13 @@ const queryClient = new QueryClient();
 
 const App = (): JSX.Element => (
   <ThemeProvider theme={theme}>
-    <BrowserRouter>
+    <HashRouter>
       <QueryClientProvider client={queryClient}>
         <AppGlobalStyles />
         <AppRoutes />
         <ToastContainer />
       </QueryClientProvider>
-    </BrowserRouter>
+    </HashRouter>
   </ThemeProvider>
 );
 

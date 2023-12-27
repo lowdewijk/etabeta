@@ -1,4 +1,5 @@
 import {useState} from 'react';
+import {Link} from 'react-router-dom';
 import {Box, Button, CircularProgress, TextField} from '@mui/material';
 
 import {
@@ -37,7 +38,7 @@ export const Main = () => {
           sessions?.map((session, idx) => (
             <li key={idx}>
               <span>
-                <a href={`session/${session.id}`}>{session.id}</a>
+                <Link to={`session/${session.id}`}> {session.id}</Link>;
               </span>
               <span>
                 <Button onClick={() => onSessionDelete(session.id)}>
