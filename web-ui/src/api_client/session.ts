@@ -1,22 +1,5 @@
 import axios from 'axios';
 
-export type SessionList = Array<{id: string}>;
-
-export const listSessions = async (): Promise<SessionList> => {
-  const response = await axios.get<SessionList>(
-    `http://localhost:8000/api/session/`,
-  );
-  return response.data;
-};
-
-export const createSession = async (sessionID: string) => {
-  return axios.post('http://localhost:8000/api/session', {sessionID});
-};
-
-export const deleteSession = async (sessionID: string) => {
-  return axios.delete(`http://localhost:8000/api/session/${sessionID}`);
-};
-
 export type Message = {
   message: string;
   username: string;
@@ -39,6 +22,15 @@ export const getMessages = async (
 ): Promise<Array<Message>> => {
   const response = await axios.get<GetMessages>(
     `http://localhost:8000/api/session/${sessionID}/messages`,
+  );
+  return response.data.messages;
+};
+
+export const getEtaBetaMessages = async (
+  sessionID: string,
+): Promise<Array<Message>> => {
+  const response = await axios.get<GetMessages>(
+    `http://localhost:8000/api/session/${sessionID}/eta_beta_messages`,
   );
   return response.data.messages;
 };

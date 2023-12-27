@@ -1,7 +1,7 @@
 import {FC} from 'react';
 import {Box, CircularProgress} from '@mui/material';
 
-import {useGetSessionMessages} from 'src/api_client/session_queries';
+import {useGetMessages} from 'src/api_client/session_queries';
 import {ErrorContainer} from 'src/components/Error/ErrorContainer';
 
 export type ChatDisplayProps = {
@@ -9,7 +9,7 @@ export type ChatDisplayProps = {
 };
 
 export const ChatDisplay: FC<ChatDisplayProps> = ({sessionID}) => {
-  const {data: messages, isError, isLoading} = useGetSessionMessages(sessionID);
+  const {data: messages, isError, isLoading} = useGetMessages(sessionID);
 
   return (
     <div
@@ -31,9 +31,7 @@ export const ChatDisplay: FC<ChatDisplayProps> = ({sessionID}) => {
             key={idx}
             sx={{p: 1, m: 1, bgcolor: 'background.paper', borderRadius: 1}}
           >
-            <div style={{textAlign: 'left'}}>
-              {message.username} : {message.message}
-            </div>
+            {message.username} : {message.message}
           </Box>
         ))
       )}

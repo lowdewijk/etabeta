@@ -3,6 +3,7 @@ import {Box} from '@mui/material';
 
 import {ChatDisplay} from './ChatDisplay';
 import {ChatInput} from './ChatInput';
+import {EtaBetaFeedback} from './EtaBetaFeedback';
 
 const asideMainCommonStyles = {
   minHeight: '300px',
@@ -63,7 +64,7 @@ export const Session: FC<SessionProps> = ({sessionID}) => {
           ...asideMainCommonStyles,
         }}
       >
-        Sidebar
+        <EtaBetaFeedback sessionID={sessionID} />
       </Box>
       <Box
         component="footer"

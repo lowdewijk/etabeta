@@ -5,7 +5,7 @@ import {
   useCreateSession,
   useDeleteSession,
   useListSessions,
-} from 'src/api_client/session_queries';
+} from 'src/api_client/sessions_queries';
 import {ErrorContainer} from 'src/components/Error/ErrorContainer';
 
 export const Main = () => {
