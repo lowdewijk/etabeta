@@ -54,5 +54,10 @@ export const useSendMessage = (sessionID: string) => {
 };
 
 export const useGetSessionMessages = (sessionID: string) => {
-  return useQuery(['messages', sessionID], () => getMessages(sessionID), {});
+  // poll for new messages every half second
+  return useQuery({
+    queryKey: ['messages', sessionID],
+    queryFn: () => getMessages(sessionID),
+    refetchInterval: 500,
+  });
 };

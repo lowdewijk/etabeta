@@ -55,12 +55,12 @@ class Sessions():
         return self.sessions.keys()
 
     def save(self):
-        with open('sessions.pickle', 'wb') as handle:
+        with open('chat_data/sessions.pickle', 'wb') as handle:
             pickle.dump(self.sessions, handle, protocol=pickle.HIGHEST_PROTOCOL)
     
     def load(self):
         try:
-            with open('sessions.pickle', 'rb') as handle:
+            with open('chat_data/sessions.pickle', 'rb') as handle:
                 self.sessions = pickle.load(handle)
         except FileNotFoundError:
             return

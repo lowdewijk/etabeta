@@ -7,8 +7,6 @@ import {ChatInput} from './ChatInput';
 const asideMainCommonStyles = {
   minHeight: '300px',
   display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
   padding: '1rem',
   fontWeight: 'bold',
 };
@@ -29,7 +27,6 @@ export const Session: FC<SessionProps> = ({sessionID}) => {
         gridTemplateColumns: '1fr minmax(200px, 20%)',
         gridTemplateRows: '3rem 1fr 3rem',
         gap: '1rem',
-
         '&> *': {
           backgroundColor: '#eee',
         },
@@ -45,12 +42,13 @@ export const Session: FC<SessionProps> = ({sessionID}) => {
           padding: '0 16px',
         }}
       >
-        Welcome to session {sessionID}
+        Welcome to session: {sessionID}
       </Box>
       <Box
         component="main"
         sx={{
           gridColumn: 'main',
+          alignItems: 'left',
           ...asideMainCommonStyles,
         }}
       >
