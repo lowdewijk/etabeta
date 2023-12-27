@@ -1,4 +1,4 @@
-import {FC} from 'react';
+import {FC, useEffect, useRef} from 'react';
 import {Box, CircularProgress} from '@mui/material';
 
 import {useGetMessages} from 'src/api_client/session_queries';
@@ -11,12 +11,22 @@ export type ChatDisplayProps = {
 export const ChatDisplay: FC<ChatDisplayProps> = ({sessionID}) => {
   const {data: messages, isError, isLoading} = useGetMessages(sessionID);
 
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({behavior: 'smooth'});
+    }
+  }, [messages]);
+
   return (
     <div
       style={{
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'flex-start',
+        overflow: 'auto',
+        maxHeight: '100%',
       }}
     >
       {isLoading ? (
@@ -35,6 +45,7 @@ export const ChatDisplay: FC<ChatDisplayProps> = ({sessionID}) => {
           </Box>
         ))
       )}
+      <div ref={messagesEndRef} />
     </div>
   );
 };

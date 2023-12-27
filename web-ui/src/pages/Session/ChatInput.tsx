@@ -1,5 +1,5 @@
 import {FC, useState} from 'react';
-import {Button, CircularProgress, TextField} from '@mui/material';
+import {Button, TextField} from '@mui/material';
 
 import {useSendMessage} from 'src/api_client/session_queries';
 
@@ -49,7 +49,7 @@ export const ChatInput: FC<ChatInputProps> = ({sessionID}) => {
         }}
       />
       <Button variant="contained" onClick={onSend}>
-        {isLoading ? <CircularProgress /> : 'Send'}
+        {isLoading ? 'Sending..' : 'Send'}
       </Button>
     </>
   );

@@ -1,20 +1,26 @@
 import axios from 'axios';
 
-export type Message = {
+export type SendMessage = {
   message: string;
   username: string;
 };
 
-export const sendMessage = async (sessionID: string, message: Message) => {
+export type Message = {
+  message: string;
+  username: string;
+  timestamp: number;
+};
+
+export type GetMessages = {
+  sessionID: string;
+  messages: Array<Message>;
+};
+
+export const sendMessage = async (sessionID: string, message: SendMessage) => {
   return axios.post(
     `http://localhost:8000/api/session/${sessionID}/send_message`,
     message,
   );
-};
-
-type GetMessages = {
-  sessionID: string;
-  messages: Array<Message>;
 };
 
 export const getMessages = async (

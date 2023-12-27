@@ -16,6 +16,9 @@ export const EtaBetaFeedback: FC<EtaBetaFeedbackProps> = ({sessionID}) => {
       sx={{
         display: 'flex',
         flexDirection: 'column',
+        fontSize: '0.8rem',
+        overflow: 'auto',
+        maxHeight: '100%',
       }}
     >
       <Box>
@@ -23,21 +26,28 @@ export const EtaBetaFeedback: FC<EtaBetaFeedbackProps> = ({sessionID}) => {
       </Box>
       <Box sx={{'padding-top': '10px'}}>
         <div>
-          {isLoading ? (
+          {isLoading || !messages ? (
             <div>
               Loading messages: <CircularProgress />
             </div>
           ) : isError ? (
             <ErrorContainer>Error loading messages.</ErrorContainer>
           ) : (
-            messages?.map((message, idx) => (
-              <Box
-                key={idx}
-                sx={{p: 1, m: 1, bgcolor: 'background.paper', borderRadius: 1}}
-              >
-                {message.message}
-              </Box>
-            ))
+            messages
+              .sort((a, b) => b.timestamp - a.timestamp)
+              .map((message, idx) => (
+                <Box
+                  key={idx}
+                  sx={{
+                    p: 1,
+                    m: 1,
+                    bgcolor: 'background.paper',
+                    borderRadius: 1,
+                  }}
+                >
+                  {message.message}
+                </Box>
+              ))
           )}
         </div>
       </Box>
