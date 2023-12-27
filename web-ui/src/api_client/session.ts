@@ -30,7 +30,7 @@ export const getEtaBetaMessages = async (
   sessionID: string,
 ): Promise<Array<Message>> => {
   const response = await axios.get<GetMessages>(
-    `http://localhost:8000/api/session/${sessionID}/eta_beta_messages`,
+    `http://localhost:8000/api/session/${sessionID}/etabeta_messages`,
   );
   return response.data.messages;
 };

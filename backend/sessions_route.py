@@ -1,7 +1,7 @@
-from pydantic import BaseModel
-
-from fastapi import APIRouter, HTTPException
 import pickle
+from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException
+
 from session import Session
 from sessions import sessions
 

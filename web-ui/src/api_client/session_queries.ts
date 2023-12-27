@@ -33,7 +33,7 @@ export const useGetMessages = (sessionID: string) => {
 export const useGetEtaBetaMessages = (sessionID: string) => {
   // poll for new messages every half second
   return useQuery({
-    queryKey: ['messages', sessionID],
+    queryKey: ['etabeta_messages', sessionID],
     queryFn: () => getEtaBetaMessages(sessionID),
     refetchInterval: 500,
   });
