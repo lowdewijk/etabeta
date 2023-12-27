@@ -1,6 +1,8 @@
 import asyncio
 from pydantic import BaseModel
 
+from openai import OpenAI
+
 class Message(BaseModel):    
     message: str
     username: str
@@ -21,7 +23,17 @@ class Session():
         return self.session_id
     
     async def query_etabeta(self):
-        self.etabeta_messages.append(Message(message="Hello from Eta Beta", username="Eta Beta"))
+      client = OpenAI()
+
+      response = client.chat.completions.create(
+        model="gpt-3.5-turbo-1106",
+        response_format={ "type": "json_object" },
+        messages=[
+          {"role": "system", "content": "You are a helpful assistant designed to output JSON."},
+          {"role": "user", "content": "Who won the world series in 2020?"}
+        ]
+      )
+      self.etabeta_messages.append(Message(message=response.choices[0].message.content, username="Eta Beta"))
 
     def get_etabeta_messages(self):
         return self.etabeta_messages
