@@ -19,7 +19,7 @@ def read_etabeta_messages(session_id: str):
     session = sessions.get_session(session_id)
     if session is None:
         raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found")
-    return {"session_id": session_id, "messages": session.get_etabeta_messages()}
+    return session.get_etabeta_state()
 
 
 class SendMessage(BaseModel):    

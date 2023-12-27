@@ -16,6 +16,12 @@ export type GetMessages = {
   messages: Array<Message>;
 };
 
+export type EtaBetaState = {
+  scores: {[user: string]: number};
+  messages: Array<Message>;
+  in_court?: string;
+};
+
 export const sendMessage = async (sessionID: string, message: SendMessage) => {
   return axios.post(
     `http://localhost:8000/api/session/${sessionID}/send_message`,
@@ -32,11 +38,11 @@ export const getMessages = async (
   return response.data.messages;
 };
 
-export const getEtaBetaMessages = async (
+export const getEtaBetaState = async (
   sessionID: string,
-): Promise<Array<Message>> => {
-  const response = await axios.get<GetMessages>(
+): Promise<EtaBetaState> => {
+  const response = await axios.get<EtaBetaState>(
     `http://localhost:8000/api/session/${sessionID}/etabeta_messages`,
   );
-  return response.data.messages;
+  return response.data;
 };

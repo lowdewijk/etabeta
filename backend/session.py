@@ -1,5 +1,6 @@
 import asyncio
 import time
+import json
 from pydantic import BaseModel
 
 from openai import AsyncOpenAI
@@ -11,11 +12,16 @@ class Message(BaseModel):
     # timestamp in ms since epoch
     timestamp: int
 
+class EtaBeta(BaseModel):
+  messages: list[Message] = []
+  in_court: Optional[str] = None
+  scores: dict[str, int] = {}
+
 class Session():
     def __init__(self, session_id: str):
         self.session_id = session_id
+        self.etabeta = EtaBeta()
         self.messages = []
-        self.etabeta_messages = []
 
     def add_message(self, message: Message):
         self.messages.append(message)
@@ -54,11 +60,17 @@ Use this JSON schema:
 
 {
   "type": "object",
+  "required": ["observations", "ball_in_court"],
   "properties": {
-    "observations_last_message": {
+    "observations": {
       "type": "object",
       "description": "Observations about the last message",
+      "required": ["positive", "negative", "username"],
       "properties": {
+        "username": {
+          "type": "string",
+          "description": "The name of the user who spoke last"
+        },
         "positive": {
           "type": "object",
           "properties": {
@@ -87,6 +99,7 @@ Use this JSON schema:
             },
             "low_quality_evidence_presented": {
               "type": "array",
+              "description": "Evidence that is not very convincing. Not contributing anything to the debate does not count as low quality evidence.",
               "items": {
                 "type": "string"
               }
@@ -101,20 +114,41 @@ Use this JSON schema:
         }
       }
     },
-    "last_user_with_ball": {
-      "type": "string"
-    },
-    "debate_winner": {
+    "ball_in_court": {
+      "description": "The name of the user who has the ball in their court",
       "type": "string"
     }
   },
-  "required": ["observations", "last_user_with_ball", "debate_winner"]
 }
 """},
           {"role": "user", "content": chat_log}
         ]
       )
-      self.etabeta_messages.append(Message(message=response.choices[0].message.content, username="Eta Beta", timestamp=time.time_ns() // 1_000_000))
+      resp = json.loads(response.choices[0].message.content)
 
-    def get_etabeta_messages(self):
-        return self.etabeta_messages
+      self.etabeta.in_court  = resp.get("ball_in_court", None)
+      positives = resp.get("observations", {}).get("positive", {})
+      negatives = resp.get("observations", {}).get("negative", {})
+      username = resp.get("observations", {}).get("username", None)
+
+      timestamp = time.time_ns() // 1_000_000
+      
+      for hq in positives.get("high_quality_evidence_presented", []):
+        self.etabeta.messages.append(Message(message=f"Nice evidence {username}! {hq}", username="Eta Beta", timestamp=timestamp))
+        self.etabeta.scores[username] = self.etabeta.scores.get(username, 0) + 1
+      for hq in positives.get("high_quality_arguments_presented", []):
+        self.etabeta.messages.append(Message(message=f"Nice argument {username}! {hq}", username="Eta Beta", timestamp=timestamp))
+        self.etabeta.scores[username] = self.etabeta.scores.get(username, 0) + 1
+
+      for hq in negatives.get("logical_fallacies_or_mistakes", []):
+        self.etabeta.messages.append(Message(message=f"{username} committed a fallacy :( {hq}", username="Eta Beta", timestamp=timestamp))
+        self.etabeta.scores[username] = self.etabeta.scores.get(username, 0) - 1
+      for hq in negatives.get("low_quality_evidence_presented", []):
+        self.etabeta.messages.append(Message(message=f"{username} presented low evidence :( {hq}", username="Eta Beta", timestamp=timestamp))
+        self.etabeta.scores[username] = self.etabeta.scores.get(username, 0) - 1
+      for hq in negatives.get("insults_or_ad_hominem_attacks", []):
+        self.etabeta.messages.append(Message(message=f"{username} committed an ad hominem :( {hq}", username="Eta Beta", timestamp=timestamp))
+        self.etabeta.scores[username] = self.etabeta.scores.get(username, 0) - 1
+
+    def get_etabeta_state(self):
+        return self.etabeta

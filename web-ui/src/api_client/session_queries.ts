@@ -2,7 +2,7 @@ import {useMutation, useQuery, useQueryClient} from 'react-query';
 import {toast} from 'react-toastify';
 
 import {
-  getEtaBetaMessages,
+  getEtaBetaState,
   getMessages,
   SendMessage,
   sendMessage,
@@ -33,11 +33,11 @@ export const useGetMessages = (sessionID: string) => {
   });
 };
 
-export const useGetEtaBetaMessages = (sessionID: string) => {
+export const useGetEtaBetaState = (sessionID: string) => {
   // poll for new messages every half second
   return useQuery({
     queryKey: ['etabeta_messages', sessionID],
-    queryFn: () => getEtaBetaMessages(sessionID),
+    queryFn: () => getEtaBetaState(sessionID),
     refetchInterval: 500,
   });
 };
