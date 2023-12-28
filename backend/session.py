@@ -33,122 +33,188 @@ class Session():
         return self.session_id
     
     async def query_etabeta(self):
+      if len(self.messages) == 0:
+        return
+
       client = AsyncOpenAI()
 
-      chat_list = [f"User: {msg.username} Message: {msg.message}" for msg in self.messages]
-      chat_log = "\n---\n".join(chat_list)
+      chat_log = [{"user": msg.username, "message": msg.message} for msg in self.messages]
+      chat_log[-1]["observe"] = True
+      observed_user = chat_log[-1]["user"]
+          
+      positives = {
+        "strong_arguments": {
+          "description": "Strong, well-reasoned and convincing arguments made.",
+          "tostr": lambda user, arg: f"Nice argument {user}! {arg}", 
+          "score": 1,
+        },
+        "high_quality_evidence": {
+          "description": "High-quality, reliable evidence presented.",
+          "tostr": lambda user, arg: f"Awesome evidence {user}! {arg}", 
+          "score": 1,
+        },
+        "logical_consistency": {
+          "description": "Logical consistency and coherence.",
+          "tostr": lambda user, arg: f"Logical consistency {user}! {arg}", 
+          "score": 1,
+        },
+        "respectful": {
+          "description": "Respectful and polite discourse.",
+          "tostr": lambda user, arg: f"Respectful discourse {user}! {arg}", 
+          "score": 0.25,
+        },
+      }
+      negatives = {
+        "weak_arguments": {
+          "description": "Weak arguments made.",
+          "tostr": lambda user, arg: f"{user} made a weak argument :( {arg}", 
+          "score": -1,
+        },
+        "low_quality_evidence": {
+          "description": "Low-quality evidence presented.",
+          "tostr": lambda user, arg: f"{user} presented low-quality evidence :( {arg}", 
+          "score": -1,
+        },
+        "logical_fallacies": {
+          "description": "Logical fallacies or errors in reasoning.",
+          "tostr": lambda user, arg: f"{user} committed a fallacy :( {arg}", 
+          "score": -1,
+        },
+        "personal_attacks": {
+          "description": "Personal attacks or ad hominem fallacies.",
+          "tostr": lambda user, arg: f"{user} committed an ad hominem :( {arg}", 
+          "score": -2,
+        },
+        "insults": {
+          "description": "Insults or profanity.",
+          "tostr": lambda user, arg: f"{user} insulted someone :( {arg}", 
+          "score": -5,
+        },
+        "off_topic": {
+          "description": "Off-topic or irrelevant comments.",
+          "tostr": lambda user, arg: f"{user} went off-topic :( {arg}",
+          "score": -0.5,
+        },
+        "repetition": {
+          "description": "Repetition of previous arguments.",
+          "tostr": lambda user, arg: f"{user} repeated themselves :( {arg}",
+          "score": -1,
+        },
+        "contradiction": {
+          "description": "Contradiction of previous arguments.",
+          "tostr": lambda user, arg: f"{user} contradicted themselves :( {arg}",
+          "score": -1,
+        },
+        "nonsequitur": {
+          "description": "Non-sequitur or non-logical arguments.",
+          "tostr": lambda user, arg: f"{user} made a non-sequitur :( {arg}",
+          "score": -1,
+        },
+        "misinformation": {
+          "description": "Misinformation or false claims.",
+          "tostr": lambda user, arg: f"{user} spread misinformation :( {arg}",
+          "score": -1,
+        },
+        "misleading": {
+          "description": "Misleading or deceptive claims.",
+          "tostr": lambda user, arg: f"{user} made a misleading claim :( {arg}",
+          "score": -1,
+        },
+        "unsubstantiated": {
+          "description": "Unsubstantiated claims.",
+          "tostr": lambda user, arg: f"{user} made an unsubstantiated claim :( {arg}",
+          "score": -1,
+        },
+        "unreliable": {   
+          "description": "Unreliable sources cited.",
+          "tostr": lambda user, arg: f"{user} cited an unreliable source :( {arg}",
+          "score": -1,
+        },
+        "unrelated": {
+          "description": "Unrelated or tangential arguments.",
+          "tostr": lambda user, arg: f"{user} made an unrelated argument :( {arg}",
+          "score": -1,
+        },
+        "unconvincing": {
+          "description": "Unconvincing arguments.",
+          "tostr": lambda user, arg: f"{user} made an unconvincing argument :( {arg}",
+          "score": -0.5,
+        },
+      }
+
+      positive_properties = {p_key: {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": p_value["description"]
+        }  for p_key, p_value in positives.items() 
+      }
+
+      negative_properties = {n_key: {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": n_value["description"]
+        }  for n_key, n_value in negatives.items() 
+      }
+
+      json_schema = {
+        "type": "object",
+        "required": ["observations", "ball_in_court"],
+        "properties": {
+          "observations": {
+            "type": "object",
+            "description": "Detailed analysis of all messages with the 'observe' flag set to true.",
+            "required": ["positive", "negative", "username"],
+            "properties": {
+              "positive": {
+                "type": "object",
+                "properties": positive_properties
+              },
+              "negative": {
+                "type": "object",
+                "properties": negative_properties
+              }
+            }
+          },
+          "ball_in_court": {
+            "description": "User with the initiative",
+            "type": "string"
+          }
+        }
+      }
 
       response = await client.chat.completions.create(
         model="gpt-4-1106-preview",
         response_format={ "type": "json_object" },
         messages=[
-          {"role": "system", "content": """
-You are etabeta, an impartial debate observer. You will be given a chat log and should return the following information:
+          {"role": "system", "content": f"""
+You are etabeta, an AI designed to impartially observe and analyze debates. Your role is to evaluate the quality of arguments and evidence presented by the participants. You will be given a chat log and should return the following information:
 
- * Observations about the LAST message:
-  * Positive:
-   * High quality evidence presented by the last user to speak
-   * High quality arguments presented by the last user to speak
-  * Negative:
-    * Any logical fallacies or logical mistakes committed by the last user to speak
-    * Any low quality evidence presented by the last user to speak
-    * Any insults or ad hominem attacks committed by the last user to speak
- * The name of the user who has the ball in their court
- * The name of the user who is winning the debate
+- You should return a list of observations of all chat messages with the 'observe' flag set to true.
+- Determine who has the initiative in the debate ('ball in their court').
 
-Use this JSON schema:
+Use this JSON schema for your response:
 
-{
-  "type": "object",
-  "required": ["observations", "ball_in_court"],
-  "properties": {
-    "observations": {
-      "type": "object",
-      "description": "Observations about the last message",
-      "required": ["positive", "negative", "username"],
-      "properties": {
-        "username": {
-          "type": "string",
-          "description": "The name of the user who spoke last"
-        },
-        "positive": {
-          "type": "object",
-          "properties": {
-            "high_quality_evidence_presented": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "high_quality_arguments_presented": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        },
-        "negative": {
-          "type": "object",
-          "properties": {
-            "logical_fallacies_or_mistakes": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "low_quality_evidence_presented": {
-              "type": "array",
-              "description": "Evidence that is not very convincing. Not contributing anything to the debate does not count as low quality evidence.",
-              "items": {
-                "type": "string"
-              }
-            },
-            "insults_or_ad_hominem_attacks": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        }
-      }
-    },
-    "ball_in_court": {
-      "description": "The name of the user who has the ball in their court",
-      "type": "string"
-    }
-  },
-}
-"""},
-          {"role": "user", "content": chat_log}
+{json.dumps(json_schema, indent=2)}"""},
+          {"role": "user", "content": json.dumps(chat_log, indent=2)}
         ]
       )
       resp = json.loads(response.choices[0].message.content)
 
       self.etabeta.in_court  = resp.get("ball_in_court", None)
-      positives = resp.get("observations", {}).get("positive", {})
-      negatives = resp.get("observations", {}).get("negative", {})
-      username = resp.get("observations", {}).get("username", None)
+      p_observations = resp.get("observations", {}).get("positive", {})
+      n_observations = resp.get("observations", {}).get("negative", {})
 
       timestamp = time.time_ns() // 1_000_000
       
-      for hq in positives.get("high_quality_evidence_presented", []):
-        self.etabeta.messages.append(Message(message=f"Nice evidence {username}! {hq}", username="Eta Beta", timestamp=timestamp))
-        self.etabeta.scores[username] = self.etabeta.scores.get(username, 0) + 1
-      for hq in positives.get("high_quality_arguments_presented", []):
-        self.etabeta.messages.append(Message(message=f"Nice argument {username}! {hq}", username="Eta Beta", timestamp=timestamp))
-        self.etabeta.scores[username] = self.etabeta.scores.get(username, 0) + 1
+      for p_key, p_value in positives.items():
+        for observation in p_observations.get(p_key, []):
+          self.etabeta.messages.append(Message(message=p_value["tostr"](observed_user, observation), username="Eta Beta", timestamp=timestamp))
+          self.etabeta.scores[observed_user] = self.etabeta.scores.get(observed_user, 0) + p_value["score"]
 
-      for hq in negatives.get("logical_fallacies_or_mistakes", []):
-        self.etabeta.messages.append(Message(message=f"{username} committed a fallacy :( {hq}", username="Eta Beta", timestamp=timestamp))
-        self.etabeta.scores[username] = self.etabeta.scores.get(username, 0) - 1
-      for hq in negatives.get("low_quality_evidence_presented", []):
-        self.etabeta.messages.append(Message(message=f"{username} presented low evidence :( {hq}", username="Eta Beta", timestamp=timestamp))
-        self.etabeta.scores[username] = self.etabeta.scores.get(username, 0) - 1
-      for hq in negatives.get("insults_or_ad_hominem_attacks", []):
-        self.etabeta.messages.append(Message(message=f"{username} committed an ad hominem :( {hq}", username="Eta Beta", timestamp=timestamp))
-        self.etabeta.scores[username] = self.etabeta.scores.get(username, 0) - 1
+      for n_key, n_value in negatives.items():
+        for observation in n_observations.get(n_key, []):
+          self.etabeta.messages.append(Message(message=n_value["tostr"](observed_user, observation), username="Eta Beta", timestamp=timestamp))
+          self.etabeta.scores[observed_user] = self.etabeta.scores.get(observed_user, 0) + n_value["score"]
 
     def get_etabeta_state(self):
         return self.etabeta
