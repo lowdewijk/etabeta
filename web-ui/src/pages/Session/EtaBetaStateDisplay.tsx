@@ -35,7 +35,10 @@ export const EtaBetaStateDisplay: FC<EtaBetaStateDisplayProps> = ({state}) => {
       </div>
       <div>
         {state.messages
-          .sort((a, b) => b.timestamp - a.timestamp)
+          .sort((a, b) => {
+            const t = b.timestamp - a.timestamp;
+            return t === 0 ? a.message.localeCompare(b.message) : t;
+          })
           .map((message, idx) => (
             <Box
               key={idx}

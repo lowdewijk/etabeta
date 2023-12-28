@@ -1,7 +1,10 @@
 import {FC, useEffect, useRef} from 'react';
 import {Box, CircularProgress} from '@mui/material';
 
-import {useGetMessages} from 'src/api_client/session_queries';
+import {
+  useGetEtaBetaState,
+  useGetMessages,
+} from 'src/api_client/session_queries';
 import {ErrorContainer} from 'src/components/Error/ErrorContainer';
 
 export type ChatDisplayProps = {
@@ -18,6 +21,8 @@ export const ChatDisplay: FC<ChatDisplayProps> = ({sessionID}) => {
       messagesEndRef.current.scrollIntoView({behavior: 'smooth'});
     }
   }, [messages]);
+
+  const {data: etabetaState} = useGetEtaBetaState(sessionID);
 
   return (
     <div
@@ -42,6 +47,11 @@ export const ChatDisplay: FC<ChatDisplayProps> = ({sessionID}) => {
             sx={{p: 1, m: 1, bgcolor: 'background.paper', borderRadius: 1}}
           >
             {message.username} : {message.message}
+            {(etabetaState?.under_observation ?? []).includes(
+              message.timestamp,
+            ) ? (
+              <span>&nbsp; 👀</span>
+            ) : null}
           </Box>
         ))
       )}

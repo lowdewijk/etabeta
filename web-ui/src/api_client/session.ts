@@ -20,6 +20,7 @@ export type EtaBetaState = {
   scores: {[user: string]: number};
   messages: Array<Message>;
   in_court?: string;
+  under_observation: Array<number>;
 };
 
 export const sendMessage = async (sessionID: string, message: SendMessage) => {

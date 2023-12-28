@@ -16,6 +16,7 @@ class EtaBeta(BaseModel):
   messages: list[Message] = []
   in_court: Optional[str] = None
   scores: dict[str, int] = {}
+  under_observation: list[int] = []
 
 class Session():
     def __init__(self, session_id: str):
@@ -37,10 +38,6 @@ class Session():
         return
 
       client = AsyncOpenAI()
-
-      chat_log = [{"user": msg.username, "message": msg.message} for msg in self.messages]
-      chat_log[-1]["observe"] = True
-      observed_user = chat_log[-1]["user"]
           
       positives = {
         "strong_arguments": {
@@ -143,9 +140,9 @@ class Session():
       }
 
       positive_properties = {p_key: {
-          "type": "array",
+          "type": "object",
           "items": { "type": "string" },
-          "description": p_value["description"]
+          "description": "Observation comments by EtaBeta. "+ p_value["description"]
         }  for p_key, p_value in positives.items() 
       }
 
@@ -175,6 +172,10 @@ class Session():
               }
             }
           },
+          "number_of_observed_messages": {
+            "description": "Number of messages with the 'observe' flag set to true.",
+            "type": "integer"
+          },
           "ball_in_court": {
             "description": "User with the initiative",
             "type": "string"
@@ -182,11 +183,18 @@ class Session():
         }
       }
 
-      response = await client.chat.completions.create(
-        model="gpt-4-1106-preview",
-        response_format={ "type": "json_object" },
-        messages=[
-          {"role": "system", "content": f"""
+      chat_log = [{"user": msg.username, "message": msg.message, "observe": False} for msg in self.messages]
+      chat_log[-1]["observe"] = True
+      observed_user = chat_log[-1]["user"]
+      observed_message_timestamp = self.messages[-1].timestamp
+      self.etabeta.under_observation.append(observed_message_timestamp)
+
+      try:
+        response = await client.chat.completions.create(
+          model="gpt-4-1106-preview",
+          response_format={ "type": "json_object" },
+          messages=[
+            {"role": "system", "content": f"""
 You are etabeta, an AI designed to impartially observe and analyze debates. Your role is to evaluate the quality of arguments and evidence presented by the participants. You will be given a chat log and should return the following information:
 
 - You should return a list of observations of all chat messages with the 'observe' flag set to true.
@@ -195,26 +203,30 @@ You are etabeta, an AI designed to impartially observe and analyze debates. Your
 Use this JSON schema for your response:
 
 {json.dumps(json_schema, indent=2)}"""},
-          {"role": "user", "content": json.dumps(chat_log, indent=2)}
-        ]
-      )
-      resp = json.loads(response.choices[0].message.content)
+            {"role": "user", "content": json.dumps(chat_log, indent=2)}
+          ]
+        )
+        resp = json.loads(response.choices[0].message.content)
+        print(response.choices[0].message.content)
 
-      self.etabeta.in_court  = resp.get("ball_in_court", None)
-      p_observations = resp.get("observations", {}).get("positive", {})
-      n_observations = resp.get("observations", {}).get("negative", {})
+        self.etabeta.in_court  = resp.get("ball_in_court", None)
+        p_observations = resp.get("observations", {}).get("positive", {})
+        n_observations = resp.get("observations", {}).get("negative", {})
 
-      timestamp = time.time_ns() // 1_000_000
-      
-      for p_key, p_value in positives.items():
-        for observation in p_observations.get(p_key, []):
-          self.etabeta.messages.append(Message(message=p_value["tostr"](observed_user, observation), username="Eta Beta", timestamp=timestamp))
-          self.etabeta.scores[observed_user] = self.etabeta.scores.get(observed_user, 0) + p_value["score"]
+        timestamp = time.time_ns() // 1_000_000
+        
+        for p_key, p_value in positives.items():
+          for observation in p_observations.get(p_key, []):
+            self.etabeta.messages.append(Message(message=p_value["tostr"](observed_user, observation), username="Eta Beta", timestamp=timestamp))
+            self.etabeta.scores[observed_user] = self.etabeta.scores.get(observed_user, 0) + p_value["score"]
 
-      for n_key, n_value in negatives.items():
-        for observation in n_observations.get(n_key, []):
-          self.etabeta.messages.append(Message(message=n_value["tostr"](observed_user, observation), username="Eta Beta", timestamp=timestamp))
-          self.etabeta.scores[observed_user] = self.etabeta.scores.get(observed_user, 0) + n_value["score"]
+        for n_key, n_value in negatives.items():
+          for observation in n_observations.get(n_key, []):
+            self.etabeta.messages.append(Message(message=n_value["tostr"](observed_user, observation), username="Eta Beta", timestamp=timestamp))
+            self.etabeta.scores[observed_user] = self.etabeta.scores.get(observed_user, 0) + n_value["score"]
+      finally:
+        self.etabeta.under_observation.remove(observed_message_timestamp)
+  
 
     def get_etabeta_state(self):
         return self.etabeta
