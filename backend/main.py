@@ -8,7 +8,7 @@ import session_route
 app = FastAPI()
 
 origins = [
-    "*", # for development
+    "*",  # for development
 ]
 
 app.add_middleware(

@@ -5,4 +5,11 @@ dependencies = [
     "fastapi",
     "uvicorn[standard]",
     "openai",
+    "mypy",
+    "black",
+    "flake8",
+    "flake8-bugbear",
 ]
+
+[tool.setuptools]
+py-modules = []

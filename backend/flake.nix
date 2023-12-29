@@ -1,5 +1,5 @@
 {
-  nixConfig.bash-prompt = "etabeta $ ";
+  nixConfig.bash-prompt = "etabeta-backend $ ";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs";
@@ -11,8 +11,6 @@
       let  
         pkgs = import nixpkgs { inherit system; overlays = [ ]; };
         deps = pkgs: (with pkgs; [
-          nodejs
-          nodePackages.npm
           python311Full
           python311Packages.pip
           python311Packages.venvShellHook
