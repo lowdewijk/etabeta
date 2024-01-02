@@ -1,6 +1,7 @@
 import {FC} from 'react';
 import {Box} from '@mui/material';
 
+import {MenuAppBar} from 'src/components/MenuAppBar/MenuAppBar';
 import {ChatDisplay} from './ChatDisplay';
 import {ChatInput} from './ChatInput';
 import {EtaBetaFeedback} from './EtaBetaFeedback';
@@ -12,9 +13,9 @@ const asideMainCommonStyles = {
   fontWeight: 'bold',
 };
 
-export interface SessionProps {
+export type SessionProps = {
   sessionID: string;
-}
+};
 
 export const Session: FC<SessionProps> = ({sessionID}) => {
   return (
@@ -23,8 +24,8 @@ export const Session: FC<SessionProps> = ({sessionID}) => {
         height: '100vh',
         display: 'grid',
         gridTemplateAreas: `"header header"
-    "main sidebar"
-    "footer footer"`,
+                            "main sidebar"
+                            "footer footer"`,
         gridTemplateColumns: '1fr minmax(300px, 20%)',
         gridTemplateRows: '3rem 1fr 3rem',
         gap: '1rem',
@@ -40,10 +41,10 @@ export const Session: FC<SessionProps> = ({sessionID}) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '0 16px',
+          padding: '0 0px',
         }}
       >
-        Welcome to session: {sessionID}
+        <MenuAppBar pageName={`Session: ${sessionID}`} />
       </Box>
       <Box
         component="main"

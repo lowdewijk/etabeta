@@ -18,8 +18,8 @@ export const EtaBetaStateDisplay: FC<EtaBetaStateDisplayProps> = ({state}) => {
         <h2>Score</h2>
       </div>
       <div>
-        {Object.entries(state.scores ?? {}).map(([username, score]) => (
-          <div>
+        {Object.entries(state.scores ?? {}).map(([username, score], idx) => (
+          <div key={idx}>
             {username}: {score}
           </div>
         ))}

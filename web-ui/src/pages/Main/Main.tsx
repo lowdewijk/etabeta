@@ -1,6 +1,6 @@
 import {useState} from 'react';
 import {Link} from 'react-router-dom';
-import {Box, Button, CircularProgress, TextField} from '@mui/material';
+import {Button, CircularProgress, TextField} from '@mui/material';
 
 import {
   useCreateSession,
@@ -8,6 +8,7 @@ import {
   useListSessions,
 } from 'src/api_client/sessions_queries';
 import {ErrorContainer} from 'src/components/Error/ErrorContainer';
+import {MenuPage} from 'src/components/MenuPage/MenuPage';
 
 export const Main = () => {
   const {data: sessions, isError, isLoading} = useListSessions();
@@ -25,7 +26,7 @@ export const Main = () => {
   };
 
   return (
-    <Box>
+    <MenuPage pageName="Session overview">
       Choose a debate session:
       <ul>
         {isLoading || isCreateSessionLoading || isDeletingSession ? (
@@ -61,6 +62,6 @@ export const Main = () => {
           CREATE
         </Button>
       </div>
-    </Box>
+    </MenuPage>
   );
 };
