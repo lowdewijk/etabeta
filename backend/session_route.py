@@ -67,4 +67,5 @@ async def send_message(session_id: str, message: SendMessage):
     session.add_message(store_message)
     sessions.save()
 
-    asyncio.create_task(session.query_etabeta())
+    if session.get_state() == SessionState.DEBATING:
+        asyncio.create_task(session.query_etabeta())

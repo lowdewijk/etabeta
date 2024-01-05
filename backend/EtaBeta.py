@@ -182,20 +182,21 @@ class EtaBeta(BaseModel):
     scores: dict[str, float] = {}
     under_observation: List[int] = []
 
-    async def query(self, messages: List[Message]):
+    async def query(self, debate_messages: List[Message]):
         try:
-            if len(messages) == 0:
+            print(debate_messages)
+            if len(debate_messages) == 0:
                 return
 
             client = AsyncOpenAI()
 
             chat_log = [
                 {"user": msg.username, "message": msg.message, "observe": False}
-                for msg in messages
+                for msg in debate_messages
             ]
             chat_log[-1]["observe"] = True
-            observed_user = messages[-1].username
-            observed_message_timestamp = messages[-1].timestamp
+            observed_user = debate_messages[-1].username
+            observed_message_timestamp = debate_messages[-1].timestamp
             self.under_observation.append(observed_message_timestamp)
 
             print(assistant_prompt)

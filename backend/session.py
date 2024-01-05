@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from enum import Enum
 import time
 
@@ -12,18 +13,26 @@ class SessionState(Enum):
     DEBATING = 2
     PAUSED = 3
 
+@dataclass
+class StateChange:
+    timestamp: int
+    prev_state: SessionState
+    next_state: SessionState
+
 class Session:
     session_id: str
     messages: List[Message] = []
     topic: Optional[str] = None
     etabeta: EtaBeta
     state: SessionState = SessionState.LOBBY
+    state_history: List[StateChange]
 
     def __init__(self, session_id: str):
         self.session_id = session_id
         self.etabeta = EtaBeta()
         self.messages = []
         self.state = SessionState.LOBBY
+        self.state_history = []
 
     def add_message(self, message: Message):
         self.messages.append(message)
@@ -36,7 +45,7 @@ class Session:
 
     async def query_etabeta(self):
         print("Querying EtaBeta")
-        return await self.etabeta.query(self.messages)
+        return await self.etabeta.query(self.get_debate_messages)
 
     def get_etabeta_state(self):
         return self.etabeta
@@ -62,7 +71,36 @@ class Session:
                 timestamp=time.time_ns() // 1_000_000,
             ))
 
+        self.state_history.append(StateChange(
+            timestamp=time.time_ns() // 1_000_000,
+            prev_state=self.state,
+            next_state=state,
+        ))
         self.state = state
     
     def get_state(self):
         return self.state
+    
+    def get_debate_times(self):
+        '''
+        Returns a list of tuples (start, end) where start is the timestamp of the start of the debate and 
+        end is the timestamp of the end of the debate or None whenever the debate is still ongoing.
+        '''
+        debate_times = []
+        start_debate = None
+        for state in self.state_history:
+            if state.next_state == SessionState.DEBATING:
+                start_debate = state.timestamp
+            if state.prev_state == SessionState.DEBATING:
+                debate_times.append((start_debate, state.timestamp))
+                start_debate = None
+        if start_debate is not None:
+            debate_times.append((start_debate, None))
+        return debate_times
+
+    def get_debate_messages(self):
+        debate_times = self.get_debate_times()
+        debate_messasges = [message for message in self.messages 
+                            if message.timestamp >= debate_times[0][0] and 
+                            (debate_times[0][1] is None or message.timestamp <= debate_times[0][1])]
+        return debate_messasges

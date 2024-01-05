@@ -1,3 +1,4 @@
+import logging
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -6,6 +7,10 @@ import sessions_route
 import session_route
 
 app = FastAPI()
+
+# Get the uvicorn logger
+uvicorn_logger = logging.getLogger("fastapi")
+uvicorn_logger.setLevel(logging.WARNING)
 
 origins = [
     "*",  # for development
