@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
+from UserError import UserError
 from sessions import sessions
-from session import Message
+from session import Message, SessionState
 from pydantic import BaseModel
 import time
 import asyncio
@@ -43,8 +44,18 @@ async def send_message(session_id: str, message: SendMessage):
     if message.message.startswith("/topic"):
         margs = message.message.split(" ")
         if len(margs) != 2:
-            return  {"user_error": "Invalid number of arguments for command /topic. Expected 1."}
+            raise UserError(message.username, "Invalid number of arguments for command /topic. Expected 1.")
         session.set_topic(message.username, margs[1])
+        sessions.save()
+        return
+    
+    if message.message.startswith("/start"):
+        session.set_state(message.username, SessionState.DEBATING)
+        sessions.save()
+        return
+
+    if message.message.startswith("/pause"):
+        session.set_state(message.username, SessionState.PAUSED)
         sessions.save()
         return
 

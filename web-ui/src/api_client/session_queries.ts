@@ -7,6 +7,7 @@ import {
   SendMessage,
   sendMessage,
 } from 'src/api_client/session';
+import {UserError} from './user_error';
 
 export const useSendMessage = (sessionID: string) => {
   const client = useQueryClient();
@@ -17,7 +18,13 @@ export const useSendMessage = (sessionID: string) => {
       onError: (error: Error) => {
         toast.error('Error sending message: ' + error.message);
       },
-      onSuccess: async () => {
+      onSuccess: async data => {
+        if (data.headers['x-user-error']) {
+          const userError = data.data as UserError;
+          toast.warning(userError.detail);
+        } else {
+          toast.success('Message sent!');
+        }
         await client.invalidateQueries({queryKey: ['messages']});
       },
     },
