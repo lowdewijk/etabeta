@@ -17,7 +17,7 @@ export const MenuPage: FC<MenuPageProps> = ({pageName, children}) => {
         gridTemplateAreas: `"header"
                             "main"`,
         gridTemplateColumns: '1fr ',
-        gridTemplateRows: '3rem 1fr 3rem',
+        gridTemplateRows: '3rem 1fr',
         gap: '1rem',
         '&> *': {
           backgroundColor: '#eee',

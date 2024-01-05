@@ -33,9 +33,20 @@ class SendMessage(BaseModel):
 async def send_message(session_id: str, message: SendMessage):
     print(f"Received message: {message.message} from {message.username}")
 
+    if len(message.message) == 0:
+        return 
+
     session = sessions.get_session(session_id)
     if session is None:
         raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found")
+
+    if message.message.startswith("/topic"):
+        margs = message.message.split(" ")
+        if len(margs) != 2:
+            return  {"user_error": "Invalid number of arguments for command /topic. Expected 1."}
+        session.set_topic(message.username, margs[1])
+        sessions.save()
+        return
 
     store_message = Message(
         message=message.message,
@@ -46,5 +57,3 @@ async def send_message(session_id: str, message: SendMessage):
     sessions.save()
 
     asyncio.create_task(session.query_etabeta())
-
-    return {"session_id": session_id}

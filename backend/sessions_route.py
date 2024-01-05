@@ -20,7 +20,7 @@ def create_session(session: CreateSession):
             status_code=400, detail=f"Session '{session_id}' already exists."
         )
 
-    print(f"Session '{session_id}' created")
+    print(f"Session '{session_id}' created.")
     sessions.save()
 
     return {"session_id": session_id}
@@ -28,10 +28,9 @@ def create_session(session: CreateSession):
 
 @router.delete("/api/session/{session_id}")
 def delete_session(session_id: str):
-    print(f"Session '{session_id}' deleted")
-
-    if sessions.get_session(session_id) is None:
+    if sessions.get_session(session_id) is not None:
         sessions.delete_session(session_id)
+        print(f"Session '{session_id}' deleted.")
     else:
         raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found")
 

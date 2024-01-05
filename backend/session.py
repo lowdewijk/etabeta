@@ -287,3 +287,14 @@ class Session:
 
     def get_etabeta_state(self):
         return self.etabeta
+    
+    def set_topic(self, commander: str, topic: str):
+        self.topic = topic
+        self.messages.append(Message(
+            message=f"Topic set to '{topic}' by {commander}",
+            username="Eta Beta",
+            timestamp=time.time_ns() // 1_000_000,
+        ))
+
+    def get_topic(self):
+        return self.topic

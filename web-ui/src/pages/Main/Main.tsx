@@ -1,5 +1,6 @@
 import {useState} from 'react';
 import {Link} from 'react-router-dom';
+import DeleteIcon from '@mui/icons-material/Delete';
 import {Button, CircularProgress, TextField} from '@mui/material';
 
 import {
@@ -27,40 +28,62 @@ export const Main = () => {
 
   return (
     <MenuPage pageName="Session overview">
-      Choose a debate session:
-      <ul>
-        {isLoading || isCreateSessionLoading || isDeletingSession ? (
-          <div>
-            <CircularProgress />
-          </div>
-        ) : isError ? (
-          <ErrorContainer>Error loading sessions.</ErrorContainer>
-        ) : (
-          sessions?.map((session, idx) => (
-            <li key={idx}>
-              <span>
-                <Link to={`session/${session.id}`}> {session.id}</Link>;
-              </span>
-              <span>
-                <Button onClick={() => onSessionDelete(session.id)}>
-                  DELETE
-                </Button>
-              </span>
-            </li>
-          ))
-        )}
-      </ul>
-      <div>
-        <TextField
-          variant="standard"
-          value={newSessionId}
-          onChange={event => {
-            setNewSessionId(event.target.value);
+      <div
+        style={{
+          paddingLeft: '1rem',
+        }}
+      >
+        <p
+          style={{
+            paddingTop: '1rem',
+            paddingBottom: '1rem',
           }}
-        />
-        <Button variant="contained" onClick={onCreateSession}>
-          CREATE
-        </Button>
+        >
+          Choose a session to join or create a new one by entering a session.
+        </p>
+        <ul
+          style={{
+            marginLeft: '1rem',
+          }}
+        >
+          {isLoading || isCreateSessionLoading || isDeletingSession ? (
+            <div>
+              <CircularProgress />
+            </div>
+          ) : isError ? (
+            <ErrorContainer>Error loading sessions.</ErrorContainer>
+          ) : (
+            sessions?.map((session, idx) => (
+              <li key={idx}>
+                <span>
+                  <Link to={`session/${session.id}`}> {session.id}</Link>
+                </span>
+                <span>
+                  <Button onClick={() => onSessionDelete(session.id)}>
+                    <DeleteIcon />
+                  </Button>
+                </span>
+              </li>
+            ))
+          )}
+        </ul>
+        <div
+          style={{
+            paddingTop: '1rem',
+          }}
+        >
+          <TextField
+            variant="standard"
+            placeholder="New session"
+            value={newSessionId}
+            onChange={event => {
+              setNewSessionId(event.target.value);
+            }}
+          />
+          <Button variant="contained" onClick={onCreateSession}>
+            Create
+          </Button>
+        </div>
       </div>
     </MenuPage>
   );
