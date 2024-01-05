@@ -11,7 +11,7 @@ import {
 import {ErrorContainer} from 'src/components/Error/ErrorContainer';
 import {MenuPage} from 'src/components/MenuPage/MenuPage';
 
-export const Main = () => {
+export const SessionsPage = () => {
   const {data: sessions, isError, isLoading} = useListSessions();
   const {mutate: createSession, isLoading: isCreateSessionLoading} =
     useCreateSession();
@@ -27,7 +27,7 @@ export const Main = () => {
   };
 
   return (
-    <MenuPage pageName="Session overview">
+    <MenuPage pageName="Sessions">
       <div
         style={{
           paddingLeft: '1rem',

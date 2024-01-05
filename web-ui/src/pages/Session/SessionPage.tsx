@@ -1,7 +1,9 @@
 import {FC} from 'react';
+import {Link} from 'react-router-dom';
 import {Box} from '@mui/material';
 
 import {MenuAppBar} from 'src/components/MenuAppBar/MenuAppBar';
+import {ROUTE_SESSIONS} from 'src/routes/Routes';
 import {ChatDisplay} from './ChatDisplay';
 import {ChatInput} from './ChatInput';
 import {EtaBetaFeedback} from './EtaBetaFeedback';
@@ -17,7 +19,7 @@ export type SessionProps = {
   sessionID: string;
 };
 
-export const Session: FC<SessionProps> = ({sessionID}) => {
+export const SessionPage: FC<SessionProps> = ({sessionID}) => {
   return (
     <Box
       sx={{
@@ -44,7 +46,10 @@ export const Session: FC<SessionProps> = ({sessionID}) => {
           padding: '0 0px',
         }}
       >
-        <MenuAppBar pageName={`Session: ${sessionID}`} />
+        <MenuAppBar
+          parentPage={<Link to={ROUTE_SESSIONS}>Sessions</Link>}
+          pageName={`Session: ${sessionID}`}
+        />
       </Box>
       <Box
         component="main"

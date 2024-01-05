@@ -1,7 +1,7 @@
 import {FC} from 'react';
 import {useParams} from 'react-router-dom';
 
-import {Session} from '../pages/Session/Session';
+import {SessionPage} from '../pages/Session/SessionPage';
 
 export const SessionRoute: FC = () => {
   const {sessionId} = useParams();
@@ -9,5 +9,5 @@ export const SessionRoute: FC = () => {
     throw new TypeError(`Missing session ID.`);
   }
 
-  return <Session sessionID={sessionId} />;
+  return <SessionPage sessionID={sessionId} />;
 };

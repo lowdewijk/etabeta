@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {FC} from 'react';
+import {FC, ReactNode} from 'react';
 import {useNavigate} from 'react-router-dom';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import AppBar from '@mui/material/AppBar';
@@ -10,13 +10,14 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 
 import {useAuth} from 'src/auth/AuthProvider';
-import {ROUTE_MAIN} from 'src/routes/Routes';
+import {ROUTE_SESSIONS} from 'src/routes/Routes';
 
 export type MenuAppBarProps = {
+  parentPage?: ReactNode;
   pageName: string;
 };
 
-export const MenuAppBar: FC<MenuAppBarProps> = ({pageName}) => {
+export const MenuAppBar: FC<MenuAppBarProps> = ({parentPage, pageName}) => {
   const {logout} = useAuth();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const navigate = useNavigate();
@@ -35,6 +36,8 @@ export const MenuAppBar: FC<MenuAppBarProps> = ({pageName}) => {
     <AppBar position="static">
       <Toolbar>
         <Typography variant="h6" component="div" sx={{flexGrow: 1}}>
+          {parentPage || null}
+          {parentPage ? ' / ' : null}
           {pageName}
         </Typography>
         <div>
@@ -68,7 +71,7 @@ export const MenuAppBar: FC<MenuAppBarProps> = ({pageName}) => {
               onClick={() => {
                 logout();
                 handleClose();
-                navigate(ROUTE_MAIN);
+                navigate(ROUTE_SESSIONS);
               }}
             >
               Logout

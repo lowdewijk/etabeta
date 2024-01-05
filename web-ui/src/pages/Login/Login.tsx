@@ -3,7 +3,7 @@ import {useNavigate} from 'react-router-dom';
 import {Button, TextField} from '@mui/material';
 
 import {useAuth} from 'src/auth/AuthProvider';
-import {ROUTE_MAIN} from 'src/routes/Routes';
+import {ROUTE_SESSIONS} from 'src/routes/Routes';
 
 export const Login = () => {
   const {login} = useAuth();
@@ -17,7 +17,7 @@ export const Login = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     login(username);
-    navigate(ROUTE_MAIN);
+    navigate(ROUTE_SESSIONS);
   };
 
   return (
