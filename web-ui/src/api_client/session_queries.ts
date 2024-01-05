@@ -22,8 +22,6 @@ export const useSendMessage = (sessionID: string) => {
         if (data.headers['x-user-error']) {
           const userError = data.data as UserError;
           toast.warning(userError.detail);
-        } else {
-          toast.success('Message sent!');
         }
         await client.invalidateQueries({queryKey: ['messages']});
       },

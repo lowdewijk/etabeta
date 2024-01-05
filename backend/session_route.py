@@ -48,7 +48,7 @@ async def send_message(session_id: str, message: SendMessage):
         session.set_topic(message.username, margs[1])
         sessions.save()
         return
-    
+
     if message.message.startswith("/start"):
         session.set_state(message.username, SessionState.DEBATING)
         sessions.save()

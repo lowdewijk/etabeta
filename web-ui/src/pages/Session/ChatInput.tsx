@@ -34,6 +34,7 @@ export const ChatInput: FC<ChatInputProps> = ({sessionID}) => {
     <>
       <TextField
         variant="standard"
+        autoFocus
         fullWidth
         value={message}
         onChange={event => {
