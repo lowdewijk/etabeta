@@ -45,7 +45,7 @@ class Session:
 
     async def query_etabeta(self):
         print("Querying EtaBeta")
-        return await self.etabeta.query(self.get_debate_messages)
+        return await self.etabeta.query(self.get_debate_messages())
 
     def get_etabeta_state(self):
         return self.etabeta
