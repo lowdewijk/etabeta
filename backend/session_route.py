@@ -43,8 +43,8 @@ async def send_message(session_id: str, message: SendMessage):
 
     if message.message.startswith("/topic"):
         margs = message.message.split(" ")
-        if len(margs) != 2:
-            raise UserError(message.username, "Invalid number of arguments for command /topic. Expected 1.")
+        if len(margs) == 2:
+            raise UserError(message.username, "Invalid number of arguments for command /topic. Expected >1.")
         session.set_topic(message.username, margs[1])
         sessions.save()
         return
