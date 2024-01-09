@@ -44,8 +44,8 @@ OBSERVATIONS_TYPES: dict[str, ObservationDesc] = {
     ),
     "clarifying_questions": ObservationDesc(
         description="Asking clarifying questions.",
-        tostr=lambda user, arg: f"Great summary {user}! {arg}",
-        score=2,
+        tostr=lambda user, arg: f"Good job asking clarifying questions {user}! {arg}",
+        score=0.25,
     ),
     "low_quality_evidence": ObservationDesc(
         description="Low-quality evidence presented.",
@@ -122,32 +122,25 @@ POSITIVE_OBSERVATIONS = {
 
 ETABETA_RESPONSE_SCHEMA = {
     "type": "object",
-    "required": ["observations", "ball_in_court"],
+    "required": ["observations", "ball_in_court", "summary"],
     "properties": {
         "observations": {
             "type": "array",
             "items": {
                 "type": "object",
-                "oneOf": [
-                    {
-                        name: {
-                            "type": "object",
-                            "required": ["name"],
-                            "description": observation.description + "Do not repeat what was said, only provide a comment to explain your observation. ",
-                            "properties": {
-                                "name": {
-                                    "type": "string",
-                                    "enum": [name],
-                                },
-                                "comment": {
-                                    "type": "string"
-                                },
-                            },
-                        }
-                        for name, observation in OBSERVATIONS_TYPES.items()
-                    }
-                ],
+                "properties": {
+                    "required": ["name"],
+                    "name": {
+                        "type": "string",
+                        "enum": list(OBSERVATIONS_TYPES.keys()),
+                    },
+                    "comment": {"type": "string"},
+                },
             },
+        },
+        "summary": {
+            "type": "string",
+            "description": "Summary of the debate",
         },
         "ball_in_court": {
             "description": "User with the initiative",
@@ -163,9 +156,8 @@ class Observation(BaseModel):
 
 class EtaBetaResponse(BaseModel):
     observations: List[Observation] = []
+    summary: str
     ball_in_court: str
-
-
 
 
 class EtaBeta(BaseModel):
@@ -175,14 +167,18 @@ class EtaBeta(BaseModel):
     under_observation: List[int] = []
 
     def create_assistant_prompt(self):
-      return dedent(f"""
-        You are EtaBeta, an AI designed to impartially analyze debates. You tend to make more positive observations
-        than negative observations.
-                      
-        You will be given a chat log and you should:
+      obs_descriptions = "\n".join([f"{name} - {obs.description}" for name, obs in OBSERVATIONS_TYPES.items()])
 
-        - return a list of observations of all chat messages. ONLY do this for messages that are flagged for obersvation.
-        - Determine who has the initiative in the debate ('ball in their court').
+      return dedent(f"""
+        You are EtaBeta, an AI designed to impartially analyze debates. 
+                      
+        You will be given a chat log. You should make observations about the messages that are flagged for observation.
+        The observations that you should make are:
+        {obs_descriptions}
+
+        You should also 
+          - Summarize the debate
+          - Determine who has the initiative in the debate ('ball in their court').
 
         Use this JSON schema for your response:
 
@@ -191,7 +187,6 @@ class EtaBeta(BaseModel):
         
 
     async def query(self, debate_topic: str, debate_messages: List[Message]) -> None:
-        print(debate_messages)
         if len(debate_messages) == 0:
             return
         observed_message_timestamp = debate_messages[-1].timestamp
