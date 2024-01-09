@@ -7,12 +7,13 @@ from pydantic import BaseModel
 
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam
-from typing import Optional, List, Callable
+from typing import Optional, Callable
 
 from Message import Message
 from textwrap import dedent
 
-ETABETA_USERNAME="Eta Beta"
+ETABETA_USERNAME = "Eta Beta"
+
 
 @dataclass
 class ObservationDesc:
@@ -149,27 +150,31 @@ ETABETA_RESPONSE_SCHEMA = {
     },
 }
 
+
 class Observation(BaseModel):
     name: str
     comment: str
 
 
 class EtaBetaResponse(BaseModel):
-    observations: List[Observation] = []
+    observations: list[Observation] = []
     summary: str
     ball_in_court: str
 
 
 class EtaBeta(BaseModel):
-    messages: List[Message] = []
+    messages: list[Message] = []
     in_court: Optional[str] = None
     scores: dict[str, float] = {}
-    under_observation: List[int] = []
+    under_observation: list[int] = []
 
     def create_assistant_prompt(self):
-      obs_descriptions = "\n".join([f"{name} - {obs.description}" for name, obs in OBSERVATIONS_TYPES.items()])
+        obs_descriptions = "\n".join(
+            [f"{name} - {obs.description}" for name, obs in OBSERVATIONS_TYPES.items()]
+        )
 
-      return dedent(f"""
+        return dedent(
+            f"""
         You are EtaBeta, an AI designed to impartially analyze debates. 
                       
         You will be given a chat log. You should make observations about the messages that are flagged for observation.
@@ -183,10 +188,10 @@ class EtaBeta(BaseModel):
         Use this JSON schema for your response:
 
         {yaml.dump(ETABETA_RESPONSE_SCHEMA)}
-      """)
-        
+      """
+        )
 
-    async def query(self, debate_topic: str, debate_messages: List[Message]) -> None:
+    async def query(self, debate_topic: str, debate_messages: list[Message]) -> None:
         if len(debate_messages) == 0:
             return
         observed_message_timestamp = debate_messages[-1].timestamp
@@ -203,31 +208,38 @@ class EtaBeta(BaseModel):
             self.under_observation.append(observed_message_timestamp)
 
             assistant_prompt = self.create_assistant_prompt()
-            messages: List[ChatCompletionMessageParam]=[
-                    {
-                        "role": "system",
-                        "content": assistant_prompt,
-                    },
-                    {"role": "user", "content": 
-                        dedent(f""""
+            messages: list[ChatCompletionMessageParam] = [
+                {
+                    "role": "system",
+                    "content": assistant_prompt,
+                },
+                {
+                    "role": "user",
+                    "content": dedent(
+                        f""""
                           The debate topic is: {debate_topic}."
                           This is the chat log:
                           {yaml.dump(chat_log)}
-                        """),
-                    }
-                ]
+                        """
+                    ),
+                },
+            ]
             logging.info(yaml.dump(messages))
             response = await client.chat.completions.create(
                 model="gpt-3.5-turbo-1106",
                 response_format={"type": "json_object"},
                 messages=messages,
             )
-            if response.choices[0].message.content is None:
-                raise Exception("Empty response from EtaBeta.")
 
-            logging.info(response.choices[0].message.content)
-            resp_content: dict = json.loads(response.choices[0].message.content)
-            resp = EtaBetaResponse(**resp_content)
+            json_response = response.choices[0].message.content
+
+            # this is so the type checker understand json_reponse is not optional
+            if json_response is None: 
+                raise Exception("Empty AI repsonse.")
+
+            logging.info(json_response)
+            parsed_json_response: dict = json.loads(json_response)
+            resp = EtaBetaResponse(**parsed_json_response)
 
             self.in_court = resp.ball_in_court
 
@@ -236,9 +248,11 @@ class EtaBeta(BaseModel):
             for observation in resp.observations:
                 obs_type = OBSERVATIONS_TYPES.get(observation.name)
                 if obs_type is None:
-                    logging.warning(f"Unknown observation '{observation.name}' with comment: {observation.comment}")
+                    logging.warning(
+                        f"Unknown observation '{observation.name}' with comment: {observation.comment}"
+                    )
                     continue
-                
+
                 msg = ("👍" if obs_type.score > 0 else "👎") +" "+ obs_type.tostr(observed_user, observation.comment)
                 self.messages.append(
                     Message(
@@ -248,7 +262,9 @@ class EtaBeta(BaseModel):
                     )
                 )
                 prev_score = self.scores.get(observed_user, 0)
-                self.scores[observed_user] = max(0,round(prev_score + obs_type.score, 2))
+                self.scores[observed_user] = max(
+                    0, round(prev_score + obs_type.score, 2)
+                )
         except Exception as e:
             logging.exception(e)
         finally:

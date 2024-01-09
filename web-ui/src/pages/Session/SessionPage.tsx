@@ -28,7 +28,7 @@ export const SessionPage: FC<SessionProps> = ({sessionID}) => {
         gridTemplateAreas: `"header header"
                             "main sidebar"
                             "footer footer"`,
-        gridTemplateColumns: '1fr minmax(300px, 20%)',
+        gridTemplateColumns: '1fr minmax(500px, 20%)',
         gridTemplateRows: '3rem 1fr 3rem',
         gap: '1rem',
         '&> *': {
