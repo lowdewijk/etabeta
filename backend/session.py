@@ -3,7 +3,7 @@ from enum import Enum
 import time
 
 from typing import Optional, List
-from EtaBeta import EtaBeta
+from EtaBeta import ETABETA_USERNAME, EtaBeta
 from Message import Message
 
 from UserError import UserError
@@ -44,8 +44,7 @@ class Session:
         return self.session_id
 
     async def query_etabeta(self):
-        print("Querying EtaBeta")
-        return await self.etabeta.query(self.get_debate_messages())
+        return await self.etabeta.query(self.get_topic(), self.get_debate_messages())
 
     def get_etabeta_state(self):
         return self.etabeta
@@ -102,5 +101,6 @@ class Session:
         debate_times = self.get_debate_times()
         debate_messasges = [message for message in self.messages 
                             if message.timestamp >= debate_times[0][0] and 
-                            (debate_times[0][1] is None or message.timestamp <= debate_times[0][1])]
+                            (debate_times[0][1] is None or message.timestamp <= debate_times[0][1]) and
+                            message.username != ETABETA_USERNAME]
         return debate_messasges

@@ -1,159 +1,153 @@
 from dataclasses import dataclass
+import logging
 import time
+import yaml
 import json
 from pydantic import BaseModel
 
 from openai import AsyncOpenAI
+from openai.types.chat import ChatCompletionMessageParam
 from typing import Optional, List, Callable
 
 from Message import Message
+from textwrap import dedent
+
+ETABETA_USERNAME="Eta Beta"
 
 @dataclass
-class QueryPoint:
+class ObservationDesc:
     description: str
     tostr: Callable[[str, str], str]
     score: float
 
-positives: dict[str, QueryPoint] = {
-    "strong-argument": QueryPoint(
+
+OBSERVATIONS_TYPES: dict[str, ObservationDesc] = {
+    "strong-argument": ObservationDesc(
         description="Strong, well-reasoned and convincing arguments made.",
         tostr=lambda user, arg: f"Nice argument {user}! {arg}",
-        score=1,
+        score=5,
     ),
-    "strong-evidence": QueryPoint(
+    "strong-evidence": ObservationDesc(
         description="High-quality, reliable evidence presented.",
         tostr=lambda user, arg: f"Awesome evidence {user}! {arg}",
-        score=1,
+        score=8,
     ),
-    "logic": QueryPoint(
+    "logic": ObservationDesc(
         description="Logical consistency and coherence.",
         tostr=lambda user, arg: f"Logical consistency {user}! {arg}",
+        score=3,
+    ),
+    "accurate_summary": ObservationDesc(
+        description="Giving an accurate summary of the other side's argument.",
+        tostr=lambda user, arg: f"God summary {user}! {arg}",
         score=1,
     ),
-    "polite": QueryPoint(
-        description="Respectful and polite discourse.",
-        tostr=lambda user, arg: f"Respectful discourse {user}! {arg}",
-        score=0.25,
+    "clarifying_questions": ObservationDesc(
+        description="Asking clarifying questions.",
+        tostr=lambda user, arg: f"Great summary {user}! {arg}",
+        score=2,
     ),
-}
-negatives = {
-    "weak_arguments": QueryPoint(
-        description="Weak arguments made.",
-        tostr=lambda user, arg: f"{user} made a weak argument :( {arg}",
-        score=-1,
-    ),
-    "low_quality_evidence": QueryPoint(
+    "low_quality_evidence": ObservationDesc(
         description="Low-quality evidence presented.",
-        tostr=lambda user, arg: f"{user} presented low-quality evidence :( {arg}",
-        score=-1,
+        tostr=lambda user, arg: f"{user} presented low-quality evidence: {arg}",
+        score=-0.5,
     ),
-    "logical_fallacies": QueryPoint(
+    "logical_fallacies": ObservationDesc(
         description="Logical fallacies or errors in reasoning.",
-        tostr=lambda user, arg: f"{user} committed a fallacy :( {arg}",
-        score=-1,
+        tostr=lambda user, arg: f"{user} committed a fallacy: {arg}",
+        score=-0.5,
     ),
-    "personal_attacks": QueryPoint(
+    "personal_attacks": ObservationDesc(
         description="Personal attacks or ad hominem fallacies.",
-        tostr=lambda user, arg: f"{user} committed an ad hominem :( {arg}",
+        tostr=lambda user, arg: f"{user} committed an ad hominem: {arg}",
         score=-2,
     ),
-    "insults": QueryPoint(
+    "insults": ObservationDesc(
         description="Insults or profanity.",
-        tostr=lambda user, arg: f"{user} insulted someone :( {arg}",
+        tostr=lambda user, arg: f"{user} insulted someone: {arg}",
         score=-5,
     ),
-    "off_topic": QueryPoint(
+    "off_topic": ObservationDesc(
         description="Off-topic or irrelevant comments.",
-        tostr=lambda user, arg: f"{user} went off-topic :( {arg}",
+        tostr=lambda user, arg: f"{user} went off-topic: {arg}",
+        score=-0.1,
+    ),
+    "repetition": ObservationDesc(
+        description="Repetition of previous arguments.",
+        tostr=lambda user, arg: f"{user} repeated themselves: {arg}",
         score=-0.5,
     ),
-    "repetition": QueryPoint(
-        description="Repetition of previous arguments.",
-        tostr=lambda user, arg: f"{user} repeated themselves :( {arg}",
-        score=-1,
-    ),
-    "contradiction": QueryPoint(
+    "contradiction": ObservationDesc(
         description="Contradiction of previous arguments.",
-        tostr=lambda user, arg: f"{user} contradicted themselves :( {arg}",
-        score=-1,
+        tostr=lambda user, arg: f"{user} contradicted themselves: {arg}",
+        score=-0.5,
     ),
-    "nonsequitur": QueryPoint(
+    "nonsequitur": ObservationDesc(
+        tostr=lambda user, arg: f"{user} made a non-sequitur: {arg}",
         description="Non-sequitur or non-logical arguments.",
-        tostr=lambda user, arg: f"{user} made a non-sequitur :( {arg}",
-        score=-1,
+        score=-0.5,
     ),
-    "misinformation": QueryPoint(
+    "misinformation": ObservationDesc(
         description="Misinformation or false claims.",
-        tostr=lambda user, arg: f"{user} spread misinformation :( {arg}",
-        score=-1,
+        tostr=lambda user, arg: f"{user} spread misinformation: {arg}",
+        score=-0.5,
     ),
-    "misleading": QueryPoint(
+    "misleading": ObservationDesc(
         description="Misleading or deceptive claims.",
-        tostr=lambda user, arg: f"{user} made a misleading claim :( {arg}",
-        score=-1,
+        tostr=lambda user, arg: f"{user} made a misleading claim: {arg}",
+        score=-0.5,
     ),
-    "unsubstantiated": QueryPoint(
+    "unsubstantiated": ObservationDesc(
         description="Unsubstantiated claims.",
-        tostr=lambda user, arg: f"{user} made an unsubstantiated claim :( {arg}",
-        score=-1,
-    ),
-    "unreliable": QueryPoint(
-        description="Unreliable sources cited.",
-        tostr=lambda user, arg: f"{user} cited an unreliable source :( {arg}",
-        score=-1,
-    ),
-    "unrelated": QueryPoint(
-        description="Unrelated or tangential arguments.",
-        tostr=lambda user, arg: f"{user} made an unrelated argument :( {arg}",
-        score=-1,
-    ),
-    "unconvincing": QueryPoint(
-        description="Unconvincing arguments.",
-        tostr=lambda user, arg: f"{user} made an unconvincing argument :( {arg}",
+        tostr=lambda user, arg: f"{user} made an unsubstantiated claim: {arg}",
         score=-0.5,
     ),
 }
 
-positive_properties = {
+POSITIVE_OBSERVATIONS = {
     p_key: {
         "type": "object",
-        "items": {"type": "string"},
+        "required": ["name", "comment"],
         "description": "Observation comments by EtaBeta. " + p_value.description,
+        "properties": {
+            "name": {
+                "type": "string",
+                "enum": [p_key],
+            },
+            "comment": {"type": "string"},
+        },
     }
-    for p_key, p_value in positives.items()
+    for p_key, p_value in OBSERVATIONS_TYPES.items()
 }
 
-negative_properties = {
-    n_key: {
-        "type": "array",
-        "items": {"type": "string"},
-        "description": n_value.description,
-    }
-    for n_key, n_value in negatives.items()
-}
-
-json_schema = {
+ETABETA_RESPONSE_SCHEMA = {
     "type": "object",
     "required": ["observations", "ball_in_court"],
     "properties": {
         "observations": {
-            "type": "object",
-            "description": "Analysis of messages with the 'observe' flag set to true.",
-            "required": ["positive", "negative", "username"],
-            "properties": {
-                "positive": {
-                    "type": "object",
-                    "properties": positive_properties,
-                },
-                "negative": {
-                    "type": "object",
-                    "properties": negative_properties,
-                },
+            "type": "array",
+            "items": {
+                "type": "object",
+                "oneOf": [
+                    {
+                        name: {
+                            "type": "object",
+                            "required": ["name"],
+                            "description": observation.description + "Do not repeat what was said, only provide a comment to explain your observation. ",
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "enum": [name],
+                                },
+                                "comment": {
+                                    "type": "string"
+                                },
+                            },
+                        }
+                        for name, observation in OBSERVATIONS_TYPES.items()
+                    }
+                ],
             },
-        },
-        "number_of_observed_messages": {
-            "description": "Number of messages with the 'observe' flag set to true.",
-            "type": "integer",
         },
         "ball_in_court": {
             "description": "User with the initiative",
@@ -162,19 +156,17 @@ json_schema = {
     },
 }
 
-assistant_prompt = f"""
-You are etabeta, an AI designed to impartially observe and analyze debates.
-Your role is to evaluate the quality of arguments and evidence presented by the
-participants. You will be given a chat log and should return the following
-information:
+class Observation(BaseModel):
+    name: str
+    comment: str
 
-- You should return a list of observations of all chat messages with
-  the 'observe' flag set to true.
-- Determine who has the initiative in the debate ('ball in their court').
 
-Use this JSON schema for your response:
+class EtaBetaResponse(BaseModel):
+    observations: List[Observation] = []
+    ball_in_court: str
 
-{json.dumps(json_schema, indent=2)}"""
+
+
 
 class EtaBeta(BaseModel):
     messages: List[Message] = []
@@ -182,14 +174,29 @@ class EtaBeta(BaseModel):
     scores: dict[str, float] = {}
     under_observation: List[int] = []
 
-    async def query(self, debate_messages: List[Message]):
+    def create_assistant_prompt(self):
+      return dedent(f"""
+        You are EtaBeta, an AI designed to impartially analyze debates. You tend to make more positive observations
+        than negative observations.
+                      
+        You will be given a chat log and you should:
+
+        - return a list of observations of all chat messages. ONLY do this for messages that are flagged for obersvation.
+        - Determine who has the initiative in the debate ('ball in their court').
+
+        Use this JSON schema for your response:
+
+        {yaml.dump(ETABETA_RESPONSE_SCHEMA)}
+      """)
+        
+
+    async def query(self, debate_topic: str, debate_messages: List[Message]) -> None:
         print(debate_messages)
         if len(debate_messages) == 0:
             return
         observed_message_timestamp = debate_messages[-1].timestamp
 
         try:
-
             client = AsyncOpenAI()
 
             chat_log = [
@@ -200,57 +207,54 @@ class EtaBeta(BaseModel):
             observed_user = debate_messages[-1].username
             self.under_observation.append(observed_message_timestamp)
 
-            print(assistant_prompt)
-            response = await client.chat.completions.create(
-                model="gpt-4-1106-preview",
-                response_format={"type": "json_object"},
-                messages=[
+            assistant_prompt = self.create_assistant_prompt()
+            messages: List[ChatCompletionMessageParam]=[
                     {
                         "role": "system",
                         "content": assistant_prompt,
                     },
-                    {"role": "user", "content": json.dumps(chat_log, indent=2)},
-                ],
+                    {"role": "user", "content": 
+                        dedent(f""""
+                          The debate topic is: {debate_topic}."
+                          This is the chat log:
+                          {yaml.dump(chat_log)}
+                        """),
+                    }
+                ]
+            logging.info(yaml.dump(messages))
+            response = await client.chat.completions.create(
+                model="gpt-3.5-turbo-1106",
+                response_format={"type": "json_object"},
+                messages=messages,
             )
             if response.choices[0].message.content is None:
                 raise Exception("Empty response from EtaBeta.")
 
-            resp = json.loads(response.choices[0].message.content)
-            print(response.choices[0].message.content)
+            logging.info(response.choices[0].message.content)
+            resp_content: dict = json.loads(response.choices[0].message.content)
+            resp = EtaBetaResponse(**resp_content)
 
-            self.in_court = resp.get("ball_in_court", None)
-            p_observations = resp.get("observations", {}).get("positive", {})
-            n_observations = resp.get("observations", {}).get("negative", {})
+            self.in_court = resp.ball_in_court
 
             timestamp = time.time_ns() // 1_000_000
 
-            for p_key, p_value in positives.items():
-                for observation in p_observations.get(p_key, []):
-                    self.messages.append(
-                        Message(
-                            message=p_value.tostr(observed_user, observation),
-                            username="Eta Beta",
-                            timestamp=timestamp,
-                        )
+            for observation in resp.observations:
+                obs_type = OBSERVATIONS_TYPES.get(observation.name)
+                if obs_type is None:
+                    logging.warning(f"Unknown observation '{observation.name}' with comment: {observation.comment}")
+                    continue
+                
+                msg = ("👍" if obs_type.score > 0 else "👎") +" "+ obs_type.tostr(observed_user, observation.comment)
+                self.messages.append(
+                    Message(
+                        message=msg,
+                        username=ETABETA_USERNAME,
+                        timestamp=timestamp,
                     )
-                    self.scores[observed_user] = (
-                        self.scores.get(observed_user, 0) + p_value.score
-                    )
-
-            for n_key, n_value in negatives.items():
-                for observation in n_observations.get(n_key, []):
-                    self.messages.append(
-                        Message(
-                            message=n_value.tostr(observed_user, observation),
-                            username="Eta Beta",
-                            timestamp=timestamp,
-                        )
-                    )
-                    self.scores[observed_user] = (
-                        self.scores.get(observed_user, 0) + n_value.score
-                    )
+                )
+                prev_score = self.scores.get(observed_user, 0)
+                self.scores[observed_user] = max(0,round(prev_score + obs_type.score, 2))
         except Exception as e:
-            print(e)
+            logging.exception(e)
         finally:
             self.under_observation.remove(observed_message_timestamp)
-
