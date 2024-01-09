@@ -234,7 +234,7 @@ class EtaBeta(BaseModel):
             json_response = response.choices[0].message.content
 
             # this is so the type checker understand json_reponse is not optional
-            if json_response is None: 
+            if json_response is None:
                 raise Exception("Empty AI repsonse.")
 
             logging.info(json_response)
@@ -253,7 +253,13 @@ class EtaBeta(BaseModel):
                     )
                     continue
 
-                msg = ("👍" if obs_type.score > 0 else "👎") +" "+ obs_type.tostr(observed_user, observation.comment)
+                up_or_down = "👍" if obs_type.score > 0 else "❌"
+                msg = (
+                    up_or_down
+                    + " "
+                    + obs_type.tostr(observed_user, observation.comment)
+                )
+
                 self.messages.append(
                     Message(
                         message=msg,
