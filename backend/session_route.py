@@ -35,9 +35,8 @@ class SendMessage(BaseModel):
 
 @router.post("/api/session/{session_id}/send_message")
 async def send_message(session_id: str, message: SendMessage):
-
     if len(message.message) == 0:
-        return 
+        return
 
     session = sessions.get_session(session_id)
     if session is None:
@@ -49,7 +48,10 @@ async def send_message(session_id: str, message: SendMessage):
 
         if command.cmd == "topic":
             if len(command.args) != 1:
-                raise UserError(command.commander, "Invalid number of arguments for command /topic. Expected 1.")
+                raise UserError(
+                    command.commander,
+                    "Invalid number of arguments for command /topic. Expected 1.",
+                )
             session.set_topic(message.username, " ".join(command.args))
             sessions.save()
             return
@@ -66,8 +68,13 @@ async def send_message(session_id: str, message: SendMessage):
 
         if command.cmd == "ai":
             if len(command.args) != 2:
-                raise UserError(command.commander, f"Invalid number of arguments for command /ai. Expected 2, but got {len(command.args)}.")
-            session.add_ai_user(command.commander, AIUser(command.args[0], command.args[1]))
+                raise UserError(
+                    command.commander,
+                    f"Invalid number of arguments for command /ai. Expected 2, but got {len(command.args)}.",
+                )
+            session.add_ai_user(
+                command.commander, AIUser(command.args[0], command.args[1])
+            )
             sessions.save()
             return
 
@@ -83,7 +90,10 @@ async def send_message(session_id: str, message: SendMessage):
         session.add_message(store_message)
         sessions.save()
 
-        if session.get_state() == SessionState.DEBATING:
+        if (
+            session.get_state() == SessionState.DEBATING
+            and message.message.startswith("#") == False
+        ):
             asyncio.create_task(session.query_ais())
 
 
@@ -92,6 +102,7 @@ class Command:
     commander: str
     cmd: str
     args: list[str]
+
 
 def command_parse(message: SendMessage) -> Command | None:
     commander = message.username
@@ -105,5 +116,5 @@ def command_parse(message: SendMessage) -> Command | None:
         return Command(commander, cmd, [])
     else:
         cmd = msg[1:space]
-        args = shlex.split(msg[space+1:])
+        args = shlex.split(msg[space + 1 :])
         return Command(commander, cmd, args)

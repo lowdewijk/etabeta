@@ -18,11 +18,15 @@ ETABETA_USERNAME = "Eta Beta"
 @dataclass
 class ObservationDesc:
     description: str
-    tostr: Callable[[str, str], str]
-    score: float
+    tostr: Callable[[str, str], str] | None = None
+    score: float = 0
 
 
 OBSERVATIONS_TYPES: dict[str, ObservationDesc] = {
+    "questioning": ObservationDesc(
+        description="Asking questions to the other side.",
+        score=0,
+    ),
     "strong-argument": ObservationDesc(
         description="Strong, well-reasoned and convincing arguments made.",
         tostr=lambda user, arg: f"Nice argument {user}! {arg}",
@@ -33,14 +37,9 @@ OBSERVATIONS_TYPES: dict[str, ObservationDesc] = {
         tostr=lambda user, arg: f"Awesome evidence {user}! {arg}",
         score=8,
     ),
-    "logic": ObservationDesc(
-        description="Logical consistency and coherence.",
-        tostr=lambda user, arg: f"Logical consistency {user}! {arg}",
-        score=3,
-    ),
     "accurate_summary": ObservationDesc(
         description="Giving an accurate summary of the other side's argument.",
-        tostr=lambda user, arg: f"God summary {user}! {arg}",
+        tostr=lambda user, arg: f"Good summary {user}! {arg}",
         score=1,
     ),
     "clarifying_questions": ObservationDesc(
@@ -69,7 +68,7 @@ OBSERVATIONS_TYPES: dict[str, ObservationDesc] = {
         score=-5,
     ),
     "off_topic": ObservationDesc(
-        description="Off-topic or irrelevant comments.",
+        description="Off-topic, irrelevant comments or not answering the question.",
         tostr=lambda user, arg: f"{user} went off-topic: {arg}",
         score=-0.1,
     ),
@@ -123,9 +122,10 @@ POSITIVE_OBSERVATIONS = {
 
 ETABETA_RESPONSE_SCHEMA = {
     "type": "object",
-    "required": ["observations", "ball_in_court", "summary"],
+    "required": ["observations_about_the_last_message", "ball_in_court", "summary"],
     "properties": {
-        "observations": {
+        "observations_about_the_last_message": {
+            "description": "Observation comments by EtaBeta about the last message only.",
             "type": "array",
             "items": {
                 "type": "object",
@@ -157,7 +157,7 @@ class Observation(BaseModel):
 
 
 class EtaBetaResponse(BaseModel):
-    observations: list[Observation] = []
+    observations_about_the_last_message: list[Observation] = []
     summary: str
     ball_in_court: str
 
@@ -168,25 +168,28 @@ class EtaBeta(BaseModel):
     scores: dict[str, float] = {}
     under_observation: list[int] = []
 
-    def create_assistant_prompt(self):
+    def create_assistant_prompt(self, observed_user: str):
         obs_descriptions = "\n".join(
-            [f"{name} - {obs.description}" for name, obs in OBSERVATIONS_TYPES.items()]
+            [
+                f" - {name} - {obs.description}\n"
+                for name, obs in OBSERVATIONS_TYPES.items()
+            ]
         )
 
         return dedent(
             f"""
-        You are EtaBeta, an AI designed to impartially analyze debates. 
-                      
-        You will be given a chat log. You should make observations about the messages that are flagged for observation.
-        The observations that you should make are:
+        You are EtaBeta, an AI designed to impartially analyze debates. You will be given a chat log to analyze by the user. 
+        
+        Please observe the LAST message by {observed_user} in the chat log and provide feedback on potential:
         {obs_descriptions}
 
-        You should also 
+        Try to keep the list of observations as small as possible. Do not respond with observations of any other messges in the chat log, but the last message.
+
+        You should also: 
           - Summarize the debate
           - Determine who has the initiative in the debate ('ball in their court').
 
         Use this JSON schema for your response:
-
         {yaml.dump(ETABETA_RESPONSE_SCHEMA)}
       """
         )
@@ -199,15 +202,23 @@ class EtaBeta(BaseModel):
         try:
             client = AsyncOpenAI()
 
-            chat_log = [
-                {"user": msg.username, "message": msg.message, "observe": False}
-                for msg in debate_messages
-            ]
-            chat_log[-1]["observe"] = True
+            chat_log: str = yaml.dump(
+                [
+                    {"user": msg.username, "message": msg.message}
+                    for msg in debate_messages[:-1]
+                ]
+            )
+            chat_log += "\n----\nThe last message is\n----\n" + yaml.dump(
+                {
+                    "user": debate_messages[-1].username,
+                    "message": debate_messages[-1].message,
+                }
+            )
+
             observed_user = debate_messages[-1].username
             self.under_observation.append(observed_message_timestamp)
 
-            assistant_prompt = self.create_assistant_prompt()
+            assistant_prompt = self.create_assistant_prompt(observed_user)
             completion_messages: list[ChatCompletionMessageParam] = [
                 {
                     "role": "system",
@@ -219,14 +230,14 @@ class EtaBeta(BaseModel):
                         f""""
                           The debate topic is: {debate_topic}."
                           This is the chat log:
-                          {yaml.dump(chat_log)}
+                          {chat_log}
                         """
                     ),
                 },
             ]
-            logging.info(yaml.dump(completion_messages))
+            # logging.info(json.dumps(completion_messages))
             response = await client.chat.completions.create(
-                model="gpt-3.5-turbo-1106",
+                model="gpt-3.5-turbo-1106",  # "gpt-4-1106-preview",
                 response_format={"type": "json_object"},
                 messages=completion_messages,
             )
@@ -246,9 +257,9 @@ class EtaBeta(BaseModel):
             timestamp = time.time_ns() // 1_000_000
 
             messages: list[str] = []
-            for observation in resp.observations:
+            for observation in resp.observations_about_the_last_message:
                 obs_type = OBSERVATIONS_TYPES.get(observation.name)
-                if obs_type is None:
+                if obs_type is None or obs_type.score == 0:
                     logging.warning(
                         f"Unknown observation '{observation.name}' with comment: {observation.comment}"
                     )
@@ -259,19 +270,23 @@ class EtaBeta(BaseModel):
                     up_or_down
                     + " "
                     + obs_type.tostr(observed_user, observation.comment)
+                    if obs_type.tostr is not None
+                    else ""
                 )
                 messages.append(msg)
                 prev_score = self.scores.get(observed_user, 0)
                 self.scores[observed_user] = max(
                     0, round(prev_score + obs_type.score, 2)
                 )
-            self.messages.append(
-                Message(
-                    username=ETABETA_USERNAME,
-                    message="\n\n".join(messages),
-                    timestamp=timestamp,
+
+            if len(messages) > 0:
+                self.messages.append(
+                    Message(
+                        username=ETABETA_USERNAME,
+                        message="\n\n".join(messages),
+                        timestamp=timestamp,
+                    )
                 )
-            )
         except Exception as e:
             logging.exception(e)
         finally:
