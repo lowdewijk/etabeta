@@ -29,7 +29,12 @@ export const EtaBetaFeedback: FC<EtaBetaFeedbackProps> = ({sessionID}) => {
       <Box>
         <h1>Eta Beta</h1>
       </Box>
-      <Box sx={{paddingTop: '10px'}}>
+      <Box
+        sx={{
+          paddingTop: '10px',
+          fontWeight: 'normal',
+        }}
+      >
         <div>
           {isLoading || !etabetaState ? (
             <div>

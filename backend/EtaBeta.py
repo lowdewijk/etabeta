@@ -208,7 +208,7 @@ class EtaBeta(BaseModel):
             self.under_observation.append(observed_message_timestamp)
 
             assistant_prompt = self.create_assistant_prompt()
-            messages: list[ChatCompletionMessageParam] = [
+            completion_messages: list[ChatCompletionMessageParam] = [
                 {
                     "role": "system",
                     "content": assistant_prompt,
@@ -224,11 +224,11 @@ class EtaBeta(BaseModel):
                     ),
                 },
             ]
-            logging.info(yaml.dump(messages))
+            logging.info(yaml.dump(completion_messages))
             response = await client.chat.completions.create(
                 model="gpt-3.5-turbo-1106",
                 response_format={"type": "json_object"},
-                messages=messages,
+                messages=completion_messages,
             )
 
             json_response = response.choices[0].message.content
@@ -245,6 +245,7 @@ class EtaBeta(BaseModel):
 
             timestamp = time.time_ns() // 1_000_000
 
+            messages: list[str] = []
             for observation in resp.observations:
                 obs_type = OBSERVATIONS_TYPES.get(observation.name)
                 if obs_type is None:
@@ -259,18 +260,18 @@ class EtaBeta(BaseModel):
                     + " "
                     + obs_type.tostr(observed_user, observation.comment)
                 )
-
-                self.messages.append(
-                    Message(
-                        message=msg,
-                        username=ETABETA_USERNAME,
-                        timestamp=timestamp,
-                    )
-                )
+                messages.append(msg)
                 prev_score = self.scores.get(observed_user, 0)
                 self.scores[observed_user] = max(
                     0, round(prev_score + obs_type.score, 2)
                 )
+            self.messages.append(
+                Message(
+                    username=ETABETA_USERNAME,
+                    message="\n\n".join(messages),
+                    timestamp=timestamp,
+                )
+            )
         except Exception as e:
             logging.exception(e)
         finally:

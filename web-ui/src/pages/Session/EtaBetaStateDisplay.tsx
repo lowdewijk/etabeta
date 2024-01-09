@@ -2,6 +2,7 @@ import {FC} from 'react';
 import {Box} from '@mui/material';
 
 import {EtaBetaState} from 'src/api_client/session';
+import {DisplayTime} from 'src/components/DisplayTime/DisplayTime';
 
 type EtaBetaStateDisplayProps = {
   state: EtaBetaState;
@@ -33,21 +34,42 @@ export const EtaBetaStateDisplay: FC<EtaBetaStateDisplayProps> = ({state}) => {
       <div>
         <h2>Messages</h2>
       </div>
-      <div>
+      <Box>
         {state.messages
           .sort((a, b) => {
             const t = b.timestamp - a.timestamp;
             return t === 0 ? a.message.localeCompare(b.message) : t;
           })
-          .map((message, idx) => (
+          .map((message, midx) => (
             <Box
-              key={idx}
-              sx={{p: 1, m: 1, bgcolor: 'background.paper', borderRadius: 1}}
+              key={midx}
+              sx={{
+                p: 1,
+                m: 1,
+                bgcolor: 'background.paper',
+                borderRadius: 1,
+                display: 'flex',
+                justifyContent: 'space-around',
+                alignItems: 'flex-end',
+              }}
             >
-              {message.message}
+              <Box>
+                {message.message.split('\n').map((line, idx) => (
+                  <div key={idx}>{line}</div>
+                ))}
+              </Box>
+              <Box
+                sx={{
+                  whiteSpace: 'nowrap',
+                  fontSize: '0.8rem',
+                  paddingLeft: '1rem',
+                }}
+              >
+                <DisplayTime timestamp={message.timestamp} />
+              </Box>
             </Box>
           ))}
-      </div>
+      </Box>
     </>
   );
 };

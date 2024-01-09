@@ -5,6 +5,8 @@ import {
   useGetEtaBetaState,
   useGetMessages,
 } from 'src/api_client/session_queries';
+import {useAuth} from 'src/auth/AuthProvider';
+import {DisplayTime} from 'src/components/DisplayTime/DisplayTime';
 import {ErrorContainer} from 'src/components/Error/ErrorContainer';
 
 export type ChatDisplayProps = {
@@ -23,6 +25,8 @@ export const ChatDisplay: FC<ChatDisplayProps> = ({sessionID}) => {
   }, [messages]);
 
   const {data: etabetaState} = useGetEtaBetaState(sessionID);
+
+  const {username} = useAuth();
 
   return (
     <div
@@ -44,14 +48,39 @@ export const ChatDisplay: FC<ChatDisplayProps> = ({sessionID}) => {
         messages?.map((message, idx) => (
           <Box
             key={idx}
-            sx={{p: 1, m: 1, bgcolor: 'background.paper', borderRadius: 1}}
+            sx={{
+              p: 1,
+              m: 1,
+              bgcolor:
+                message.username === 'Eta Beta'
+                  ? '#e0e0e0'
+                  : 'background.paper',
+              borderRadius: 1,
+              fontWeight: 'normal',
+              width: '90%',
+              marginLeft: message.username === username ? undefined : 'auto',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-end',
+            }}
           >
-            {message.username} : {message.message}
-            {(etabetaState?.under_observation ?? []).includes(
-              message.timestamp,
-            ) ? (
-              <span>&nbsp; 👀</span>
-            ) : null}
+            <Box sx={{}}>
+              <b>{message.username}</b>: {message.message}
+              {(etabetaState?.under_observation ?? []).includes(
+                message.timestamp,
+              ) ? (
+                <span>&nbsp; 👀</span>
+              ) : null}
+            </Box>
+            <Box
+              sx={{
+                paddingLeft: '1rem',
+                whiteSpace: 'nowrap',
+                fontSize: '0.8rem',
+              }}
+            >
+              <DisplayTime timestamp={message.timestamp} />
+            </Box>
           </Box>
         ))
       )}
