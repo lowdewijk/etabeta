@@ -121,6 +121,7 @@ POSITIVE_OBSERVATIONS = {
 }
 
 ETABETA_RESPONSE_SCHEMA = {
+    "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
     "required": ["observations_about_the_last_message", "ball_in_court", "summary"],
     "properties": {
@@ -140,13 +141,30 @@ ETABETA_RESPONSE_SCHEMA = {
             },
         },
         "summary": {
-            "type": "string",
-            "description": "Summary of the debate",
+            "type": "array",
+            "description": "Summary of the debate in terms of arguments",
+            "items": {
+                "type": "object",
+                "items": {"$ref": "#/definitions/argument"},
+            },
         },
         "ball_in_court": {
             "description": "User with the initiative",
             "type": "string",
         },
+    },
+    "definitions": {
+        "argument": {
+            "type": "object",
+            "properties": {
+                "argument": {"type": "string"},
+                "counter_arguments": {
+                    "type": "array",
+                    "items": {"$ref": "#/definitions/argument"},
+                },
+            },
+            "required": ["argument"],
+        }
     },
 }
 
@@ -156,10 +174,15 @@ class Observation(BaseModel):
     comment: str
 
 
+class Argument(BaseModel):
+    argument: str
+    counter_arguments: "list[Argument]" = []
+
+
 class EtaBetaResponse(BaseModel):
     observations_about_the_last_message: list[Observation] = []
-    summary: str
-    ball_in_court: str
+    summary: list[Argument] = []
+    ball_in_court: str = ""
 
 
 class EtaBeta(BaseModel):
@@ -167,6 +190,7 @@ class EtaBeta(BaseModel):
     in_court: Optional[str] = None
     scores: dict[str, float] = {}
     under_observation: list[int] = []
+    summary: str = ""
 
     def create_assistant_prompt(self, observed_user: str):
         obs_descriptions = "\n".join(
@@ -186,7 +210,7 @@ class EtaBeta(BaseModel):
         Try to keep the list of observations as small as possible. Do not respond with observations of any other messges in the chat log, but the last message.
 
         You should also: 
-          - Summarize the debate
+          - Summarize the debate using nested bullet-points with arguments for and against.
           - Determine who has the initiative in the debate ('ball in their court').
 
         Use this JSON schema for your response:
@@ -253,6 +277,7 @@ class EtaBeta(BaseModel):
             resp = EtaBetaResponse(**parsed_json_response)
 
             self.in_court = resp.ball_in_court
+            self.summary = resp.summary
 
             timestamp = time.time_ns() // 1_000_000
 

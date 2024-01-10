@@ -36,6 +36,7 @@ export const ChatDisplay: FC<ChatDisplayProps> = ({sessionID}) => {
         alignItems: 'flex-start',
         overflow: 'auto',
         maxHeight: '100%',
+        width: '100%',
       }}
     >
       {isLoading ? (

@@ -16,10 +16,16 @@ export type GetMessages = {
   messages: Array<Message>;
 };
 
+export type EtaBetaArgument = {
+  argument: string;
+  counter_arguments: Array<EtaBetaArgument>;
+};
+
 export type EtaBetaState = {
   scores: {[user: string]: number};
   messages: Array<Message>;
   in_court?: string;
+  summary: Array<EtaBetaArgument>;
   under_observation: Array<number>;
 };
 

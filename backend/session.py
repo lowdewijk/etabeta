@@ -37,7 +37,7 @@ class Session:
     messages: List[Message] = []
     topic: Optional[str] = None
     etabeta: EtaBeta
-    state: SessionState = SessionState.LOBBY
+    state: SessionState
     state_history: List[StateChange]
     active_users: List[User] = []
 
@@ -76,12 +76,15 @@ class Session:
                 )
             )
 
+        ai_users = self.get_ai_users()
         awaits = [self.etabeta.query(topic, debate_messages)] + [
-            get_ai_message(ai_user, debate_messages) for ai_user in self.get_ai_users()
+            get_ai_message(ai_user, debate_messages) for ai_user in ai_users
         ]
         await asyncio.gather(*awaits)
 
-        await self.etabeta.query(self.get_topic(), self.get_debate_messages())
+        # run again to check the message of the AI users
+        if len(ai_users) > 0:
+            await self.etabeta.query(self.get_topic(), self.get_debate_messages())
 
     def get_etabeta_state(self):
         return self.etabeta

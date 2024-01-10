@@ -1,7 +1,7 @@
 import {FC} from 'react';
-import {Box} from '@mui/material';
+import {Box, List, ListItem} from '@mui/material';
 
-import {EtaBetaState} from 'src/api_client/session';
+import {EtaBetaArgument, EtaBetaState} from 'src/api_client/session';
 import {DisplayTime} from 'src/components/DisplayTime/DisplayTime';
 
 type EtaBetaStateDisplayProps = {
@@ -12,6 +12,30 @@ export const EtaBetaStateDisplay: FC<EtaBetaStateDisplayProps> = ({state}) => {
   if (!state) {
     return <div>No state</div>;
   }
+
+  const renderArg = (arg: EtaBetaArgument, idx: number) => {
+    return (
+      <ListItem key={idx} sx={{pl: 1, pb: 0, pt: 0.5}}>
+        {arg.argument}
+        {arg.counter_arguments.length > 0 && (
+          <List
+            sx={{
+              listStyleType: 'disc',
+              pl: 1,
+              pt: 0,
+              pb: 0,
+              m: 0,
+              '& .MuiListItem-root': {
+                display: 'list-item',
+              },
+            }}
+          >
+            {arg.counter_arguments.map((child, aidx) => renderArg(child, aidx))}
+          </List>
+        )}
+      </ListItem>
+    );
+  };
 
   return (
     <>
@@ -30,6 +54,28 @@ export const EtaBetaStateDisplay: FC<EtaBetaStateDisplayProps> = ({state}) => {
         <h2>In court</h2>
       </div>
       <div>{state.in_court || 'No one'}</div>
+      <div
+        style={{
+          paddingTop: '1rem',
+        }}
+      >
+        <h2>Summary</h2>
+      </div>
+      <div>
+        <List
+          sx={{
+            listStyleType: 'disc',
+            pl: 2,
+            pb: 0,
+            m: 0,
+            '& .MuiListItem-root': {
+              display: 'list-item',
+            },
+          }}
+        >
+          {state.summary.map((arg, aidx) => renderArg(arg, aidx))}
+        </List>
+      </div>
       <br />
       <div>
         <h2>Messages</h2>
