@@ -73,7 +73,7 @@ export const EtaBetaStateDisplay: FC<EtaBetaStateDisplayProps> = ({state}) => {
             },
           }}
         >
-          {state.summary.map((arg, aidx) => renderArg(arg, aidx))}
+          {(state.summary || []).map((arg, aidx) => renderArg(arg, aidx))}
         </List>
       </div>
       <br />

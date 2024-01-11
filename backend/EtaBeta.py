@@ -142,7 +142,7 @@ ETABETA_RESPONSE_SCHEMA = {
         },
         "summary": {
             "type": "array",
-            "description": "Summary of the debate in terms of arguments",
+            "description": "Summary of the entire debate in terms of its arguments",
             "items": {
                 "type": "object",
                 "items": {"$ref": "#/definitions/argument"},
@@ -210,7 +210,7 @@ class EtaBeta(BaseModel):
         Try to keep the list of observations as small as possible. Do not respond with observations of any other messges in the chat log, but the last message.
 
         You should also: 
-          - Summarize the debate using nested bullet-points with arguments for and against.
+          - Summarize the entire debate using nested bullet-points with arguments for and against.
           - Determine who has the initiative in the debate ('ball in their court').
 
         Use this JSON schema for your response:
@@ -278,6 +278,8 @@ class EtaBeta(BaseModel):
 
             self.in_court = resp.ball_in_court
             self.summary = resp.summary
+            if self.summary is None:
+                self.summary = []
 
             timestamp = time.time_ns() // 1_000_000
 
