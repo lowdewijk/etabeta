@@ -1,0 +1,2 @@
+# add the static_data directory, so the etabeta python package has the frontend
+include etabeta/static_data/*

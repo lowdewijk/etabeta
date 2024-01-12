@@ -1,3 +1,5 @@
+import os
+from pathlib import Path
 import logging
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -25,6 +27,8 @@ app.add_middleware(
 )
 
 
-app.mount("/static", StaticFiles(directory="static", html=True), name="static")
+cwd = Path(os.path.dirname(os.path.abspath(__file__)))
+static_data = cwd.joinpath("static_data")
+app.mount("/static", StaticFiles(directory=static_data, html=True), name="static")
 app.include_router(sessions_route)
 app.include_router(session_route)

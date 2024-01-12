@@ -46,9 +46,16 @@
                 pathsToLink = [ "/bin"  "/" ];
             };
 
-            # python -m env .venv
+            # ''
+            #   #!/bin/bash
+            #   python -m venv .venv
+            #   source .venv/bin/activate
+            #   pip install etabeta-0.0.1-py3-none-any.whl
+            # '';
+
+            # python -m venv .venv
             # source .venv/bin/activate
-            # pip install etabeta-0.0.1-py2.py3-none-any.whl
+            # pip install etabeta-0.0.1-py3-none-any.whl
 
           };
 
@@ -60,23 +67,12 @@
             src = ./.;
 
             nativeBuildInputs = [
-              pkgs.python311Packages.hatchling
-            ];
-            propagatedBuildInputs = [
-              pkgs.python311Packages.hatchling
+              pkgs.python311Packages.setuptools
+              pkgs.python311Packages.setuptools-scm
             ];
           };
 
           default = self.packages."${system}".etabeta;
-        };
-
-        apps = {
-          # run-etabeta = {
-          #   type = "app";
-          #   program = "${self.packages."${system}".etabeta}/bin/sts";
-          # };
-
-          # default = self.apps."${system}".run-etabeta;
         };
 
       }

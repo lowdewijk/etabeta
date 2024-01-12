@@ -17,3 +17,9 @@ dependencies = [
     "colorlog",
     "pyyaml",
 ]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["*"]  # alternatively: `exclude = ["additional*"]`
+namespaces = false
+

@@ -1,8 +1,8 @@
 __pycache__
 chat_data
 .env
-static
 .venv
 .mypy_cache
 .vscode
 dist
+result
