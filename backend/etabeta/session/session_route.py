@@ -1,11 +1,11 @@
 import logging
 from attr import dataclass
 from fastapi import APIRouter, HTTPException
-from src.session.AIUser import AIUser
-from src.common.Message import Message
-from src.session.session import SessionState
-from src.common.UserError import UserError
-from src.common.chat_data import sessions
+from etabeta.session.AIUser import AIUser
+from etabeta.common.Message import Message
+from etabeta.session.session import SessionState
+from etabeta.common.UserError import UserError
+from etabeta.common.chat_data import sessions
 
 from pydantic import BaseModel
 import time

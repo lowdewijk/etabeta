@@ -1,8 +1,8 @@
 from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException
-from src.session.session import Session
-from src.sessions.sessions import Sessions
-from src.common.chat_data import sessions
+from etabeta.session.session import Session
+from etabeta.sessions.sessions import Sessions
+from etabeta.common.chat_data import sessions
 
 router: APIRouter = APIRouter()
 

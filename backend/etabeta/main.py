@@ -3,8 +3,8 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.sessions.sessions_route import router as sessions_route
-from src.session.session_route import router as session_route
+from etabeta.sessions.sessions_route import router as sessions_route
+from etabeta.session.session_route import router as session_route
 
 app = FastAPI()
 

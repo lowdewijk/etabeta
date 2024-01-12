@@ -29,29 +29,30 @@
         
         packages = {
           dockerImage = pkgs.dockerTools.buildImage {
-            name = "etebeta-backend";
-            # tag = "latest";
+            name = "etabeta";
+
             copyToRoot = pkgs.buildEnv {
                 name = "foo";
+
                 paths = deps(pkgsLinux) ++ [
                   pkgsLinux.bash 
-                  pkgsLinux.coreutils-full 
+                  pkgsLinux.coreutils-full
+                  pkgsLinux.vim
+                  pkgsLinux.findutils
+                  pkgsLinux.unzip
+                  self.packages."${system}".etabeta
+                  self.packages."${system}".etabeta.dist
                 ];
-                pathsToLink = [ "/bin" ];
+                pathsToLink = [ "/bin"  "/" ];
             };
+
+            # python -m env .venv
+            # source .venv/bin/activate
+            # pip install etabeta-0.0.1-py2.py3-none-any.whl
+
           };
 
-          # test = stdenv.mkDerivation {
-          #   name = "test";
-          #   buildInputs = [ pkgs.bash pkgs.coreutils ];
-          #   phases = [ "installPhase" ];
-          #   installPhase = ''
-          #     mkdir -p $out
-          #     echo "hello world" > $out/test.txt
-          #   '';
-          # };
-
-          default = pkgs.python311Packages.buildPythonPackage {
+          etabeta = pkgs.python311Packages.buildPythonApplication {
             pname = "etabeta";
             version = "0.0.1";
             pyproject = true;
@@ -59,13 +60,14 @@
             src = ./.;
 
             nativeBuildInputs = [
-              pkgs.python311Packages.setuptools
-              pkgs.python311Packages.wheel
+              pkgs.python311Packages.hatchling
             ];
-
-            # has no tests yet
-            doCheck = false;
+            propagatedBuildInputs = [
+              pkgs.python311Packages.hatchling
+            ];
           };
+
+          default = self.packages."${system}".etabeta;
         };
 
         apps = {

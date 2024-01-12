@@ -4,11 +4,11 @@ from enum import Enum
 import time
 
 from typing import Optional, List
-from src.session.AIUser import AIUser
-from src.session.EtaBeta import ETABETA_USERNAME, EtaBeta
-from src.common.Message import Message
+from etabeta.session.AIUser import AIUser
+from etabeta.session.EtaBeta import ETABETA_USERNAME, EtaBeta
+from etabeta.common.Message import Message
 
-from src.common.UserError import UserError
+from etabeta.common.UserError import UserError
 
 
 class SessionState(Enum):

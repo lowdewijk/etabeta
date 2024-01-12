@@ -1,5 +1,5 @@
 import pickle
-from src.session.session import Session
+from etabeta.session.session import Session
 
 
 class Sessions:
