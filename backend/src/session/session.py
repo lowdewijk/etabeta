@@ -3,12 +3,12 @@ from dataclasses import dataclass
 from enum import Enum
 import time
 
-from typing import Optional, List, Union
-from AIUser import AIUser
-from EtaBeta import ETABETA_USERNAME, EtaBeta
-from Message import Message
+from typing import Optional, List
+from src.session.AIUser import AIUser
+from src.session.EtaBeta import ETABETA_USERNAME, EtaBeta
+from src.common.Message import Message
 
-from UserError import UserError
+from src.common.UserError import UserError
 
 
 class SessionState(Enum):

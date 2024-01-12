@@ -9,7 +9,7 @@ from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam
 from typing import Optional, Callable
 
-from Message import Message
+from src.common.Message import Message
 from textwrap import dedent
 
 ETABETA_USERNAME = "Eta Beta"

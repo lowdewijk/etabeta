@@ -2,6 +2,7 @@
 name = "etabeta"
 version = "0.0.1"
 dependencies = [
+    "build",
     "fastapi",
     "uvicorn[standard]",
     "openai",
@@ -13,5 +14,6 @@ dependencies = [
     "pyyaml",
 ]
 
-[tool.setuptools]
-py-modules = []
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

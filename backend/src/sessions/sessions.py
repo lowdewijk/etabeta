@@ -1,5 +1,5 @@
 import pickle
-from session import Session
+from src.session.session import Session
 
 
 class Sessions:
@@ -28,7 +28,3 @@ class Sessions:
                 self.sessions = pickle.load(handle)
         except FileNotFoundError:
             return
-
-
-sessions = Sessions()
-sessions.load()

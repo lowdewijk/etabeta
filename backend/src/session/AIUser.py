@@ -6,7 +6,7 @@ from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam
 import yaml
 
-from Message import Message
+from src.common.Message import Message
 
 
 @dataclass

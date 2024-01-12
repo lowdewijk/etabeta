@@ -3,8 +3,8 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
-import sessions_route
-import session_route
+from src.sessions.sessions_route import router as sessions_route
+from src.session.session_route import router as session_route
 
 app = FastAPI()
 
@@ -26,5 +26,5 @@ app.add_middleware(
 
 
 app.mount("/static", StaticFiles(directory="static", html=True), name="static")
-app.include_router(sessions_route.router)
-app.include_router(session_route.router)
+app.include_router(sessions_route)
+app.include_router(session_route)

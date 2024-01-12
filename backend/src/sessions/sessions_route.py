@@ -1,9 +1,10 @@
 from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException
-from session import Session
-from sessions import sessions
+from src.session.session import Session
+from src.sessions.sessions import Sessions
+from src.common.chat_data import sessions
 
-router = APIRouter()
+router: APIRouter = APIRouter()
 
 
 class CreateSession(BaseModel):
