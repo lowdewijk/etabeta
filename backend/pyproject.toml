@@ -5,21 +5,9 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "etabeta"
 version = "0.0.1"
-dependencies = [
-    "build",
-    "fastapi",
-    "uvicorn[standard]",
-    "openai",
-    "mypy",
-    "black",
-    "flake8",
-    "flake8-bugbear",
-    "colorlog",
-    "pyyaml",
-]
+# dependencies are managed by Nix!
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["*"]  # alternatively: `exclude = ["additional*"]`
+include = ["*"] 
 namespaces = false
-

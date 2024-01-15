@@ -1,5 +1,5 @@
 import logging
-from attr import dataclass
+from dataclasses import dataclass
 from fastapi import APIRouter, HTTPException
 from etabeta.session.AIUser import AIUser
 from etabeta.common.Message import Message
