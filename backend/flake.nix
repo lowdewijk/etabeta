@@ -11,9 +11,9 @@
       let  
         pkgs = import nixpkgs { inherit system; overlays = [ ]; };
         pkgsLinux = import nixpkgs { system = "x86_64-linux";  overlays = [ ]; };
-        pythonPkgs = pkgs.python311Packages;
+        pythonPkgs = pkgs: pkgs.python311Packages;
 
-        pythonDeps = pkgs: (with pythonPkgs; [
+        pythonDeps = pkgs: (with pythonPkgs(pkgs); [
           fastapi
           uvicorn
           openai
@@ -21,7 +21,7 @@
           pyyaml
           python-dotenv
         ]);
-        pythonBuildDeps = pkgs: (with pythonPkgs; [
+        pythonBuildDeps = pkgs: (with pythonPkgs(pkgs); [
           build
           mypy
           black
@@ -29,9 +29,10 @@
           flake8-bugbear
           types-pyyaml
         ]);
-        deps = pkgs: (with pkgs; [
+        otherDeps = pkgs: (with pkgs; [
           python311Full
-        ]) ++ pythonDeps(pkgs) ++ pythonBuildDeps(pkgs);
+        ]);
+        deps = otherDeps(pkgs) ++ pythonDeps(pkgs) ++ pythonBuildDeps(pkgs);
         
         stdenv = pkgs.stdenv;
 
@@ -82,11 +83,11 @@
 
             src = ./.;
 
-            nativeBuildInputs = [
-              pythonPkgs.setuptools
-              pythonPkgs.setuptools-scm
-              pythonPkgs.mypy
-            ];
+            nativeBuildInputs = (with pythonPkgs(pkgs); [
+              setuptools
+              setuptools-scm
+              mypy
+            ]);
 
             buildInputs = pythonBuildDeps(pkgs);
             propagatedBuildInputs = pythonDeps(pkgs);
