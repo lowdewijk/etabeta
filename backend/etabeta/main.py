@@ -1,6 +1,7 @@
+import logging
 import os
 from pathlib import Path
-import logging
+from etabeta.common.logging import configure_logging
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,9 +11,8 @@ from etabeta.session.session_route import router as session_route
 
 app = FastAPI()
 
-# Get the uvicorn logger
-uvicorn_logger = logging.getLogger("fastapi")
-uvicorn_logger.setLevel(logging.WARNING)
+# configure logging
+configure_logging()
 
 origins = [
     "*",  # for development
@@ -32,3 +32,6 @@ static_data = cwd.joinpath("static_data")
 app.mount("/static", StaticFiles(directory=static_data, html=True), name="static")
 app.include_router(sessions_route)
 app.include_router(session_route)
+
+log = logging.getLogger(__name__)
+log.info("Starting EtaBeta server.")

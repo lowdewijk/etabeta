@@ -13,6 +13,7 @@ import asyncio
 import shlex
 
 router = APIRouter()
+log = logging.getLogger(__name__)
 
 
 @router.get("/api/session/{session_id}/messages")
@@ -47,7 +48,7 @@ async def send_message(session_id: str, message: SendMessage):
 
     command = command_parse(message)
     if command is not None:
-        logging.info(f"Received command: {command} from {message.username}")
+        log.info(f"Received command: {command} from {message.username}")
 
         if command.cmd == "topic":
             if len(command.args) != 1:

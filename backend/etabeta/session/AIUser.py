@@ -1,12 +1,12 @@
 from dataclasses import dataclass
 import logging
 from textwrap import dedent
-
 from openai import AsyncOpenAI
+from etabeta.common.Message import Message
 from openai.types.chat import ChatCompletionMessageParam
 import yaml
 
-from etabeta.common.Message import Message
+log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -47,7 +47,7 @@ class AIUser:
                 ),
             },
         ]
-        logging.error(yaml.dump(messages))
+        log.error(yaml.dump(messages))
         response = await client.chat.completions.create(
             model="gpt-3.5-turbo-1106",
             messages=messages,

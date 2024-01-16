@@ -67,7 +67,7 @@
             };
 
             config = { 
-              Cmd = [ "python" "-m" "uvicorn" "etabeta.main:app" "--host" "0.0.0.0" ];
+              Entrypoint = [ "python" "-m" "uvicorn" "etabeta.main:app" "--host" "0.0.0.0" ];
               WorkingDir = "/lib/python3.11/site-packages";
               ExposedPorts = { "8000/tcp" = {}; };
             };

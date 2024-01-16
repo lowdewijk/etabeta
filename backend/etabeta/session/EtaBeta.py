@@ -13,6 +13,7 @@ from etabeta.common.Message import Message
 from textwrap import dedent
 
 ETABETA_USERNAME = "Eta Beta"
+log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -259,7 +260,9 @@ class EtaBeta(BaseModel):
                     ),
                 },
             ]
-            # logging.info(json.dumps(completion_messages))
+
+            if log.level == "DEBUG":
+                log.debug(f"EtaBeta OpenAI response: {json.dumps(completion_messages)}")
             response = await client.chat.completions.create(
                 model="gpt-3.5-turbo-1106",  # "gpt-4-1106-preview",
                 response_format={"type": "json_object"},
@@ -272,7 +275,7 @@ class EtaBeta(BaseModel):
             if json_response is None:
                 raise Exception("Empty AI repsonse.")
 
-            logging.info(json_response)
+            log.info(json_response)
             parsed_json_response: dict = json.loads(json_response)
             resp = EtaBetaResponse(**parsed_json_response)
 
@@ -287,7 +290,7 @@ class EtaBeta(BaseModel):
             for observation in resp.observations_about_the_last_message:
                 obs_type = OBSERVATIONS_TYPES.get(observation.name)
                 if obs_type is None or obs_type.score == 0:
-                    logging.warning(
+                    log.warning(
                         f"Unknown observation '{observation.name}' with comment: {observation.comment}"
                     )
                     continue
@@ -315,6 +318,6 @@ class EtaBeta(BaseModel):
                     )
                 )
         except Exception as e:
-            logging.exception(e)
+            log.exception("EtaBeta AI failed to respond.")
         finally:
             self.under_observation.remove(observed_message_timestamp)
