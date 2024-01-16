@@ -36,13 +36,14 @@
         
         stdenv = pkgs.stdenv;
 
+        # Necessary for the docker image
         getPropagatedPythonPackages = pkg: (with builtins // pkgs.lib.lists;
           let 
             getPropagatedBuildInputs = pkg: pkg.propagatedBuildInputs ++ (map getPropagatedBuildInputs pkg.propagatedBuildInputs);
             pbuilds = unique ( flatten ( (getPropagatedBuildInputs pkg ) ));
           in 
-            #FIXME use builtins.elem
-            filter (pkg: (isList (match "^python3.11-.*" pkg.name))) pbuilds);
+            filter (pkg: (isList (match "^python3.11-.*" pkg.name))) pbuilds
+        );
 
       in {
         devShell = pkgs.mkShell {
@@ -56,23 +57,20 @@
             copyToRoot = pkgs.buildEnv {
                 name = "etabeta-build";
 
-                paths = [
-                  pkgsLinux.bash 
-                  pkgsLinux.coreutils-full
-                  pkgsLinux.vim
-                  pkgsLinux.curl
-                  pkgsLinux.findutils
-                  pkgsLinux.unzip
-                  self.packages."${system}".etabeta                  
-                  pkgsLinux.python311Full
-                ] ++ getPropagatedPythonPackages self.packages."${system}".etabeta;
-                pathsToLink = [ "/bin"  "/" ];
+                paths = 
+                  otherDeps(pkgsLinux) ++ 
+                  [self.packages."${system}".etabeta ] ++
+                  # These need to be added explicitly for them to be availble in the working directory.
+                  (getPropagatedPythonPackages self.packages."${system}".etabeta);
+                
+                # Somehow if I don't add "/" to the pathsToLink, the python packages
+                # do not end up in the working directory. I don't know why.
+                pathsToLink = [ "/bin" "/"  ];
             };
 
             config = { 
-              Entrypoint = [ "python" "-m" "uvicorn" "etabeta.main:app" "--host" "0.0.0.0" ];
+              Cmd = [ "python" "-m" "uvicorn" "etabeta.main:app" "--host" "0.0.0.0" ];
               WorkingDir = "/lib/python3.11/site-packages";
-              ExposedPorts = { "8000/tcp" = {}; };
             };
           };
 
