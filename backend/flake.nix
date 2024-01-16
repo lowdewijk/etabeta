@@ -22,10 +22,12 @@
           python-dotenv
         ]);
         pythonBuildDeps = pkgs: (with pythonPkgs; [
+          build
           mypy
           black
           flake8
           flake8-bugbear
+          types-pyyaml
         ]);
         deps = pkgs: (with pkgs; [
           python311Full
@@ -81,12 +83,18 @@
             src = ./.;
 
             nativeBuildInputs = [
-              pkgs.python311Packages.setuptools
-              pkgs.python311Packages.setuptools-scm
+              pythonPkgs.setuptools
+              pythonPkgs.setuptools-scm
+              pythonPkgs.mypy
             ];
 
             buildInputs = pythonBuildDeps(pkgs);
             propagatedBuildInputs = pythonDeps(pkgs);
+            checkPhase = ''
+              runHook preCheck
+              mypy $src
+              runHook postCheck
+            '';
           };
 
           default = self.packages."${system}".etabeta;

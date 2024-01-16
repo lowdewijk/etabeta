@@ -191,7 +191,7 @@ class EtaBeta(BaseModel):
     in_court: Optional[str] = None
     scores: dict[str, float] = {}
     under_observation: list[int] = []
-    summary: str = ""
+    summary: list[Argument] = []
 
     def create_assistant_prompt(self, observed_user: str):
         obs_descriptions = "\n".join(
