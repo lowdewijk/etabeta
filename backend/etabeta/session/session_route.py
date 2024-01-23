@@ -16,7 +16,7 @@ router = APIRouter()
 log = logging.getLogger(__name__)
 
 
-@router.get("/api/session/{session_id}/messages")
+@router.get("/session/{session_id}/messages")
 def read_messages(session_id: str):
     session = sessions.get_session(session_id)
     if session is None:
@@ -24,7 +24,7 @@ def read_messages(session_id: str):
     return {"session_id": session_id, "messages": session.get_messages()}
 
 
-@router.get("/api/session/{session_id}/etabeta_messages")
+@router.get("/session/{session_id}/etabeta_messages")
 def read_etabeta_messages(session_id: str):
     session = sessions.get_session(session_id)
     if session is None:
@@ -37,7 +37,7 @@ class SendMessage(BaseModel):
     username: str
 
 
-@router.post("/api/session/{session_id}/send_message")
+@router.post("/session/{session_id}/send_message")
 async def send_message(session_id: str, message: SendMessage):
     if len(message.message) == 0:
         return

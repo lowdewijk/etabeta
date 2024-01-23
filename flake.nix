@@ -70,8 +70,8 @@
                 name = "etabeta-build";
 
                 paths = 
+                  [self.packages.${system}.etabeta] ++
                   otherBackendDeps(pkgsLinux) ++ 
-                  [self.packages.${system}.etabeta pkgsLinux.bash pkgsLinux.coreutils-full pkgsLinux.findutils pkgsLinux.vim pkgsLinux.curl] ++
                   # These need to be added explicitly for them to be availble in the working directory.
                   (getPythonDepsWithPropagatedPackages pkgsLinux);
                 

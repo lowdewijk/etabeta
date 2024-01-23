@@ -12,7 +12,7 @@ class CreateSession(BaseModel):
     sessionID: str
 
 
-@router.post("/api/session/")
+@router.post("/session")
 def create_session(session: CreateSession):
     session_id = session.sessionID
     if sessions.get_session(session_id) is None:
@@ -28,7 +28,7 @@ def create_session(session: CreateSession):
     return {"session_id": session_id}
 
 
-@router.delete("/api/session/{session_id}")
+@router.delete("/session/{session_id}")
 def delete_session(session_id: str):
     if sessions.get_session(session_id) is not None:
         sessions.delete_session(session_id)
@@ -39,6 +39,6 @@ def delete_session(session_id: str):
     return {"session_id": session_id}
 
 
-@router.get("/api/session/")
+@router.get("/session")
 def list_sessions():
     return [{"id": id} for id in sessions.get_session_ids()]
