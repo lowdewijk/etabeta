@@ -1,5 +1,5 @@
 {
-  nixConfig.bash-prompt = "etabeta $ ";
+  nixConfig.bash-prompt = "etabeta $(pwd) $ ";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs";
@@ -105,6 +105,23 @@
               runHook preCheck
               mypy $src
               runHook postCheck
+            '';
+          };
+
+          webui = pkgs.stdenv.mkDerivation {
+            name = "etabeta-webui";
+            src = ./web-ui;
+            buildInputs = webuiDeps pkgs;
+
+            buildPhase = ''
+              echo "Installing NPM packages"
+              npm i 
+              echo "Building webui"
+              npm run build
+              '';
+            installPhase = ''
+              mkdir $out
+              cp -r build/* $out
             '';
           };
 
