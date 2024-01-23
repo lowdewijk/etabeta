@@ -32,10 +32,8 @@
         otherDeps = pkgs: (with pkgs; [
           python311Full
         ]);
-        deps = otherDeps(pkgs) ++ pythonDeps(pkgs) ++ pythonBuildDeps(pkgs);
+        deps = pkgs: otherDeps(pkgs) ++ pythonDeps(pkgs) ++ pythonBuildDeps(pkgs);
         
-        stdenv = pkgs.stdenv;
-
         # Necessary for the docker image
         getPropagatedPythonPackages = pkg: (with builtins // pkgs.lib.lists;
           let 

@@ -29,9 +29,9 @@ app.add_middleware(
 
 cwd = Path(os.path.dirname(os.path.abspath(__file__)))
 static_data = cwd.joinpath("static_data")
-app.mount("/static", StaticFiles(directory=static_data, html=True), name="static")
 app.include_router(sessions_route)
 app.include_router(session_route)
+app.mount("/", StaticFiles(directory=static_data, html=True), name="static")
 
 log = logging.getLogger(__name__)
 log.info("Starting EtaBeta server.")
