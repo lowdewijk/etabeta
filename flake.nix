@@ -1,5 +1,5 @@
 {
-  nixConfig.bash-prompt = "etabeta-backend $ ";
+  nixConfig.bash-prompt = "etabeta $ ";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs";
@@ -13,6 +13,7 @@
         pkgsLinux = import nixpkgs { system = "x86_64-linux";  overlays = [ ]; };
         pythonPkgs = pkgs: pkgs.python311Packages;
 
+        # Backend dependencies
         pythonDeps = pkgs: (with pythonPkgs(pkgs); [
           fastapi
           uvicorn
@@ -29,19 +30,32 @@
           flake8-bugbear
           types-pyyaml
         ]);
-        otherDeps = pkgs: (with pkgs; [
+        otherBackendDeps = pkgs: (with pkgs; [
           python311Full
         ]);
-        deps = pkgs: otherDeps(pkgs) ++ pythonDeps(pkgs) ++ pythonBuildDeps(pkgs);
+        backendDeps = pkgs: otherBackendDeps(pkgs) ++ pythonDeps(pkgs) ++ pythonBuildDeps(pkgs);
+
+        # Webui dependencies
+        webuiDeps = pkgs: (with pkgs; [
+          nodejs
+          nodePackages.npm
+        ]);
+
+        # All dependencies
+        deps = pkgs: (backendDeps pkgs) ++ (webuiDeps pkgs);
         
-        # Necessary for the docker image
         getPropagatedPythonPackages = pkg: (with builtins // pkgs.lib.lists;
           let 
             getPropagatedBuildInputs = pkg: pkg.propagatedBuildInputs ++ (map getPropagatedBuildInputs pkg.propagatedBuildInputs);
             pbuilds = unique ( flatten ( (getPropagatedBuildInputs pkg ) ));
+            result = filter (pkg: (isList (match "^python3.11-.*" pkg.name))) pbuilds;
           in 
-            filter (pkg: (isList (match "^python3.11-.*" pkg.name))) pbuilds
+            result
         );
+
+        # Necessary for the docker image
+        getPythonDepsWithPropagatedPackages = pkgs:
+          (pythonDeps pkgs) ++ (pkgs.lib.flatten (map getPropagatedPythonPackages (pythonDeps pkgs)));
 
       in {
         devShell = pkgs.mkShell {
@@ -56,10 +70,10 @@
                 name = "etabeta-build";
 
                 paths = 
-                  otherDeps(pkgsLinux) ++ 
-                  [self.packages."${system}".etabeta ] ++
+                  otherBackendDeps(pkgsLinux) ++ 
+                  [self.packages.${system}.etabeta pkgsLinux.bash pkgsLinux.coreutils-full pkgsLinux.findutils pkgsLinux.vim pkgsLinux.curl] ++
                   # These need to be added explicitly for them to be availble in the working directory.
-                  (getPropagatedPythonPackages self.packages."${system}".etabeta);
+                  (getPythonDepsWithPropagatedPackages pkgsLinux);
                 
                 # Somehow if I don't add "/" to the pathsToLink, the python packages
                 # do not end up in the working directory. I don't know why.
@@ -77,7 +91,7 @@
             version = "0.0.1";
             pyproject = true;
 
-            src = ./.;
+            src = ./backend;
 
             nativeBuildInputs = (with pythonPkgs(pkgs); [
               setuptools
