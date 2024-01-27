@@ -2,13 +2,11 @@ import webpack from "webpack";
 import merge from "webpack-merge";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
 
-import {outDir} from './build-constants';
 import commonConfig from './webpack.common.config';
 
 const prodSpecificConfig: webpack.Configuration = {
   mode: "production",
   output: {
-    path: outDir,
     filename: "[name].[contenthash].js",
     publicPath: "",
     clean: true,

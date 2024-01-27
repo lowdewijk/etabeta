@@ -9,7 +9,7 @@
   outputs = { self, nixpkgs, flake-utils }:
     flake-utils.lib.eachDefaultSystem (system:
       let
-        pkgs = import nixpkgs { inherit system; overlays = [ ]; };        
+        pkgs = import nixpkgs { inherit system; overlays = [ ]; };
         pkgsLinux = import nixpkgs { system = "x86_64-linux"; overlays = [ ]; };
         pythonPkgs = pkgs: pkgs.python311Packages;
 
@@ -101,10 +101,12 @@
               mypy
             ]);
 
+            buildInputs = (pythonBuildDeps pkgs) ++ [ self.packages.${system}.webui ];
+            propagatedBuildInputs = (pythonDeps pkgs);
 
-
-            buildInputs = pythonBuildDeps (pkgs);
-            propagatedBuildInputs = pythonDeps (pkgs);
+            # preBuild = ''
+            #   cp -r ${self.packages.${system}.webui}/lib/node_modules/etabeta/dist $PWD/
+            # '';
             # checkPhase = ''
             #   mypy .
             # '';
@@ -115,18 +117,6 @@
             name = "etabeta-webui";
             src = ./web-ui;
             npmDepsHash = "sha256-8kTCAY8gUfQR7rvaU1qJghGUf5+lRBrFolznJ3FWHMs=";
-            npmBuildScript = "build";
-  #          buildInputs = webuiDeps pkgs;
-              # buildPhase = ''
-            #   echo "Installing NPM packages"
-            #   npm i 
-            #   echo "Building webui"
-            #   npm run build
-            # '';
-            # installPhase = ''
-            #   mkdir $out
-            #   cp -r build/* $out
-            # '';
           };
 
           default = self.packages."${system}".etabeta;
