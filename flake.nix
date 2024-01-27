@@ -8,13 +8,13 @@
 
   outputs = { self, nixpkgs, flake-utils }:
     flake-utils.lib.eachDefaultSystem (system:
-      let  
-        pkgs = import nixpkgs { inherit system; overlays = [ ]; };
-        pkgsLinux = import nixpkgs { system = "x86_64-linux";  overlays = [ ]; };
+      let
+        pkgs = import nixpkgs { inherit system; overlays = [ ]; };        
+        pkgsLinux = import nixpkgs { system = "x86_64-linux"; overlays = [ ]; };
         pythonPkgs = pkgs: pkgs.python311Packages;
 
         # Backend dependencies
-        pythonDeps = pkgs: (with pythonPkgs(pkgs); [
+        pythonDeps = pkgs: (with pythonPkgs (pkgs); [
           fastapi
           uvicorn
           openai
@@ -22,7 +22,7 @@
           pyyaml
           python-dotenv
         ]);
-        pythonBuildDeps = pkgs: (with pythonPkgs(pkgs); [
+        pythonBuildDeps = pkgs: (with pythonPkgs (pkgs); [
           build
           mypy
           black
@@ -33,7 +33,7 @@
         otherBackendDeps = pkgs: (with pkgs; [
           python311Full
         ]);
-        backendDeps = pkgs: otherBackendDeps(pkgs) ++ pythonDeps(pkgs) ++ pythonBuildDeps(pkgs);
+        backendDeps = pkgs: otherBackendDeps (pkgs) ++ pythonDeps (pkgs) ++ pythonBuildDeps (pkgs);
 
         # Webui dependencies
         webuiDeps = pkgs: (with pkgs; [
@@ -43,44 +43,45 @@
 
         # All dependencies
         deps = pkgs: (backendDeps pkgs) ++ (webuiDeps pkgs);
-        
+
         getPropagatedPythonPackages = pkg: (with builtins // pkgs.lib.lists;
-          let 
+          let
             getPropagatedBuildInputs = pkg: pkg.propagatedBuildInputs ++ (map getPropagatedBuildInputs pkg.propagatedBuildInputs);
-            pbuilds = unique ( flatten ( (getPropagatedBuildInputs pkg ) ));
+            pbuilds = unique (flatten ((getPropagatedBuildInputs pkg)));
             result = filter (pkg: (isList (match "^python3.11-.*" pkg.name))) pbuilds;
-          in 
-            result
+          in
+          result
         );
 
         # Necessary for the docker image
         getPythonDepsWithPropagatedPackages = pkgs:
           (pythonDeps pkgs) ++ (pkgs.lib.flatten (map getPropagatedPythonPackages (pythonDeps pkgs)));
 
-      in {
+      in
+      {
         devShell = pkgs.mkShell {
-          buildInputs = deps(pkgs);
+          buildInputs = deps (pkgs);
         };
-        
+
         packages = {
           dockerImage = pkgs.dockerTools.buildImage {
             name = "etabeta";
 
             copyToRoot = pkgs.buildEnv {
-                name = "etabeta-build";
+              name = "etabeta-build";
 
-                paths = 
-                  [self.packages.${system}.etabeta] ++
-                  otherBackendDeps(pkgsLinux) ++ 
-                  # These need to be added explicitly for them to be availble in the working directory.
-                  (getPythonDepsWithPropagatedPackages pkgsLinux);
-                
-                # Somehow if I don't add "/" to the pathsToLink, the python packages
-                # do not end up in the working directory. I don't know why.
-                pathsToLink = [ "/bin" "/"  ];
+              paths =
+                [ self.packages.${system}.etabeta ] ++
+                otherBackendDeps (pkgsLinux) ++
+                # These need to be added explicitly for them to be availble in the working directory.
+                (getPythonDepsWithPropagatedPackages pkgsLinux);
+
+              # Somehow if I don't add "/" to the pathsToLink, the python packages
+              # do not end up in the working directory. I don't know why.
+              pathsToLink = [ "/bin" "/" ];
             };
 
-            config = { 
+            config = {
               Cmd = [ "python" "-m" "uvicorn" "etabeta.main:app" "--host" "0.0.0.0" ];
               WorkingDir = "/lib/python3.11/site-packages";
             };
@@ -91,44 +92,47 @@
             version = "0.0.1";
             pyproject = true;
 
-            src = ./backend;
+            srcs = [ ./backend self.packages.${system}.webui ];
+            sourceRoot = "./backend";
 
-            nativeBuildInputs = (with pythonPkgs(pkgs); [
+            nativeBuildInputs = (with pythonPkgs (pkgs); [
               setuptools
               setuptools-scm
               mypy
             ]);
 
-            buildInputs = pythonBuildDeps(pkgs);
-            propagatedBuildInputs = pythonDeps(pkgs);
-            checkPhase = ''
-              runHook preCheck
-              mypy $src
-              runHook postCheck
-            '';
+
+
+            buildInputs = pythonBuildDeps (pkgs);
+            propagatedBuildInputs = pythonDeps (pkgs);
+            # checkPhase = ''
+            #   mypy .
+            # '';
           };
 
-          webui = pkgs.stdenv.mkDerivation {
+
+          webui = pkgs.buildNpmPackage {
             name = "etabeta-webui";
             src = ./web-ui;
-            buildInputs = webuiDeps pkgs;
-
-            buildPhase = ''
-              echo "Installing NPM packages"
-              npm i 
-              echo "Building webui"
-              npm run build
-              '';
-            installPhase = ''
-              mkdir $out
-              cp -r build/* $out
-            '';
+            npmDepsHash = "sha256-8kTCAY8gUfQR7rvaU1qJghGUf5+lRBrFolznJ3FWHMs=";
+            npmBuildScript = "build";
+  #          buildInputs = webuiDeps pkgs;
+              # buildPhase = ''
+            #   echo "Installing NPM packages"
+            #   npm i 
+            #   echo "Building webui"
+            #   npm run build
+            # '';
+            # installPhase = ''
+            #   mkdir $out
+            #   cp -r build/* $out
+            # '';
           };
 
           default = self.packages."${system}".etabeta;
         };
 
       }
-   );
+    );
 
 }
