@@ -71,7 +71,7 @@
               name = "etabeta-build";
 
               paths =
-                [ self.packages.${system}.etabeta ] ++
+                [ self.packages.${system}.backend ] ++
                 otherBackendDeps (pkgsLinux) ++
                 # These need to be added explicitly for them to be availble in the working directory.
                 (getPythonDepsWithPropagatedPackages pkgsLinux);
@@ -87,11 +87,10 @@
             };
           };
 
-          etabeta = pkgs.python311Packages.buildPythonApplication {
-            pname = "etabeta";
-            version = "0.0.1";
+          backend = pkgs.python311Packages.buildPythonApplication {
+            name = "etabeta-backend";
+            
             pyproject = true;
-
             srcs = [ ./backend self.packages.${system}.webui ];
             sourceRoot = "./backend";
 
@@ -100,26 +99,31 @@
               setuptools-scm
               mypy
             ]);
-
             buildInputs = (pythonBuildDeps pkgs) ++ [ self.packages.${system}.webui ];
             propagatedBuildInputs = (pythonDeps pkgs);
 
-            # preBuild = ''
-            #   cp -r ${self.packages.${system}.webui}/lib/node_modules/etabeta/dist $PWD/
-            # '';
-            # checkPhase = ''
-            #   mypy .
-            # '';
-          };
+            preBuild = ''
+              echo Copy webui to static_data
+              cp -rf ${self.packages.${system}.webui}/lib/node_modules/etabeta/dist/* $PWD/etabeta/static_data/
+            '';
 
+            checkPhase = ''
+              mypy $PWD/etabeta
+            '';
+          };
 
           webui = pkgs.buildNpmPackage {
             name = "etabeta-webui";
-            src = ./web-ui;
+            src = ./webui;
             npmDepsHash = "sha256-8kTCAY8gUfQR7rvaU1qJghGUf5+lRBrFolznJ3FWHMs=";
+            installPhase = ''
+              echo Copy dist to lib/node_modules/etabeta
+              mkdir -p $out/lib/node_modules/etabeta
+              cp -rf $PWD/dist $out/lib/node_modules/etabeta
+            '';
           };
 
-          default = self.packages."${system}".etabeta;
+          default = self.packages."${system}".dockerImage;
         };
 
       }
