@@ -73,12 +73,10 @@
               paths =
                 [ self.packages.${system}.backend ] ++
                 otherBackendDeps (pkgsLinux) ++
-                # These need to be added explicitly for them to be availble in the working directory.
+                # These need to be added explicitly for them to be available
                 (getPythonDepsWithPropagatedPackages pkgsLinux);
 
-              # Somehow if I don't add "/" to the pathsToLink, the python packages
-              # do not end up in the working directory. I don't know why.
-              pathsToLink = [ "/bin" "/" ];
+              pathsToLink = [ "/bin" "/lib/python3.11/site-packages" ];
             };
 
             config = {
@@ -104,6 +102,7 @@
 
             preBuild = ''
               echo Copy webui to static_data
+              mkdir -p $PWD/etabeta/static_data/
               cp -rf ${self.packages.${system}.webui}/lib/node_modules/etabeta/dist/* $PWD/etabeta/static_data/
             '';
 
