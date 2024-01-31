@@ -3,7 +3,7 @@ import {toast} from 'react-toastify';
 
 import {
   getEtaBetaState,
-  getMessages,
+  readMessages,
   SendMessage,
   sendMessage,
 } from 'src/api_client/session';
@@ -29,11 +29,11 @@ export const useSendMessage = (sessionID: string) => {
   );
 };
 
-export const useGetMessages = (sessionID: string) => {
+export const useReadMessages = (sessionID: string, username: string) => {
   // poll for new messages every half second
   return useQuery({
-    queryKey: ['messages', sessionID],
-    queryFn: () => getMessages(sessionID),
+    queryKey: ['readMessages', sessionID, username],
+    queryFn: () => readMessages(sessionID, username),
     refetchInterval: 500,
   });
 };

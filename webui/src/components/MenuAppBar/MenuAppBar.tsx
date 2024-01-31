@@ -9,7 +9,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 
-import {useAuth} from 'src/auth/AuthProvider';
+import {useLoggedInAuth} from 'src/auth/AuthProvider';
 import {ROUTE_SESSIONS} from 'src/routes/Routes';
 
 export type MenuAppBarProps = {
@@ -18,11 +18,9 @@ export type MenuAppBarProps = {
 };
 
 export const MenuAppBar: FC<MenuAppBarProps> = ({parentPage, pageName}) => {
-  const {logout} = useAuth();
+  const {logout, username} = useLoggedInAuth();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const navigate = useNavigate();
-
-  const {username} = useAuth();
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);

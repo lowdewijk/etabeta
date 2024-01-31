@@ -1,15 +1,23 @@
 import {createContext, FC, useContext, useState} from 'react';
 
-export type AuthContextProps = {
+export type AuthContextLoggedOutProps = {
   login: (username: string) => void;
-  logout: () => void;
-  isLoggedIn: boolean;
-  username?: string;
+  isLoggedIn: false;
+  username: undefined;
 };
+
+export type AuthContextLoggedInProps = {
+  logout: () => void;
+  isLoggedIn: true;
+  username: string;
+};
+
+export type AuthContextProps =
+  | AuthContextLoggedOutProps
+  | AuthContextLoggedInProps;
 
 const AuthContext = createContext<AuthContextProps>({
   login: () => {},
-  logout: () => {},
   isLoggedIn: false,
   username: undefined,
 });
@@ -36,13 +44,37 @@ export const AuthProvider: FC<AuthProviderProps> = ({children}) => {
 
   const isLoggedIn = !!username;
 
-  return (
-    <AuthContext.Provider value={{isLoggedIn, username, login, logout}}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const props: AuthContextProps = isLoggedIn
+    ? {
+        logout,
+        username,
+        isLoggedIn: true,
+      }
+    : {
+        login,
+        username: undefined,
+        isLoggedIn: false,
+      };
+
+  return <AuthContext.Provider value={props}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextProps => {
   return useContext(AuthContext);
+};
+
+export const useLoggedInAuth = (): AuthContextLoggedInProps => {
+  const result = useAuth();
+  if (!result.isLoggedIn) {
+    throw new Error('You must be authenticated to use this function.');
+  }
+  return result;
+};
+
+export const useLoggedOutAuth = (): AuthContextLoggedOutProps => {
+  const result = useAuth();
+  if (result.isLoggedIn) {
+    throw new Error('You must not be authenticated to use this function.');
+  }
+  return result;
 };

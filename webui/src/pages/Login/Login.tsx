@@ -2,11 +2,11 @@ import React, {useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {Button, TextField} from '@mui/material';
 
-import {useAuth} from 'src/auth/AuthProvider';
+import {useLoggedOutAuth} from 'src/auth/AuthProvider';
 import {ROUTE_SESSIONS} from 'src/routes/Routes';
 
 export const Login = () => {
-  const {login} = useAuth();
+  const {login} = useLoggedOutAuth();
   const [username, setUsername] = useState('');
   const navigate = useNavigate();
 

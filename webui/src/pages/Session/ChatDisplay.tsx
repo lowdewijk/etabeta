@@ -3,9 +3,9 @@ import {Box, CircularProgress} from '@mui/material';
 
 import {
   useGetEtaBetaState,
-  useGetMessages,
+  useReadMessages,
 } from 'src/api_client/session_queries';
-import {useAuth} from 'src/auth/AuthProvider';
+import {useLoggedInAuth} from 'src/auth/AuthProvider';
 import {DisplayTime} from 'src/components/DisplayTime/DisplayTime';
 import {ErrorContainer} from 'src/components/Error/ErrorContainer';
 
@@ -14,7 +14,13 @@ export type ChatDisplayProps = {
 };
 
 export const ChatDisplay: FC<ChatDisplayProps> = ({sessionID}) => {
-  const {data: messages, isError, isLoading} = useGetMessages(sessionID);
+  const {username} = useLoggedInAuth();
+
+  const {
+    data: messages,
+    isError,
+    isLoading,
+  } = useReadMessages(sessionID, username);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -25,8 +31,6 @@ export const ChatDisplay: FC<ChatDisplayProps> = ({sessionID}) => {
   }, [messages]);
 
   const {data: etabetaState} = useGetEtaBetaState(sessionID);
-
-  const {username} = useAuth();
 
   return (
     <div

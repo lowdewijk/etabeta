@@ -33,11 +33,12 @@ export const sendMessage = async (sessionID: string, message: SendMessage) => {
   return axios.post(`/api/session/${sessionID}/send_message`, message);
 };
 
-export const getMessages = async (
+export const readMessages = async (
   sessionID: string,
+  username: string,
 ): Promise<Array<Message>> => {
   const response = await axios.get<GetMessages>(
-    `/api/session/${sessionID}/messages`,
+    `/api/session/${sessionID}/messages/${username}`,
   );
   return response.data.messages;
 };

@@ -6,7 +6,7 @@ import time
 from typing import Optional, List
 from etabeta.session.AIUser import AIUser
 from etabeta.session.EtaBeta import ETABETA_USERNAME, EtaBeta
-from etabeta.common.Message import Message
+from etabeta.common.Message import Message, Username
 
 from etabeta.common.UserError import UserError
 
@@ -52,8 +52,12 @@ class Session:
     def add_message(self, message: Message):
         self.messages.append(message)
 
-    def get_messages(self):
-        return self.messages
+    def get_messages(self, username: Username) -> list[Message]:
+        return [
+            msg
+            for msg in self.messages
+            if msg.private_message is None or username in msg.private_message
+        ]
 
     def get_session_id(self):
         return self.session_id
