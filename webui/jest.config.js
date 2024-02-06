@@ -1,8 +1,6 @@
 module.exports = {
   preset: 'ts-jest/presets/js-with-ts',
-  // TODO replace when adding the integration testing
-  // testEnvironment: 'jsdom',
-  testEnvironment: 'node',
+  testEnvironment: 'jsdom',
   moduleDirectories: ['src', 'node_modules'],
   rootDir: './',
   moduleNameMapper: {
@@ -10,5 +8,6 @@ module.exports = {
     '\\.(css|scss)$': 'identity-obj-proxy',
     'src/(.*)': '<rootDir>/src/$1',
   },
-//  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  transformIgnorePatterns: ["/node_modules/(?!(remark-.*|mdast-.*|hast-.*|micromark|decode-named-character-reference|unist-.*|trim-lines|devlop|unified|bail|is-plain-obj|trough|vfile|rehype-.*|comma-separated-token|estree-util-is-identifier-name|property-information|space-separated-tokens))"]
 };

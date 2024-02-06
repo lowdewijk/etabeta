@@ -102,14 +102,17 @@ async def send_message(session_id: str, message: SendMessage):
         if command.cmd == "help":
             session.add_message(
                 Message(
-                    message="""Commands: 
-/topic $topic - Set the topic of the debate.
-/start - Start the debate. The topic must first be set, see /topic. 
-/pause - Pause the debate.
-/ai $name $prompt - Add an AI user to the room with the given name and prompt. You can use the prompt to tell the AI what to think about the debate topic.
-/help - Show this help message.
+                    message="""Commands:                    
 
-Note: Command arguments must be separated by a space. For multi-word arguments, use quotes. For example: /topic "This is a topic".""",
+| Command     | Arguments     | Description                                                                                                                            |
+| ----------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| /topic      | $topic        | Set the topic of the debate to $topic.                                                                                                 |
+| /start      |               | Start the debate. The topic must first be set, see /topic.                                                                             |
+| /pause      |               | Pause the debate.                                                                                                                      |
+| /ai         | $name $prompt | Add an AI user to the room with the given name and prompt. You can use the prompt to tell the AI what to think about the debate topic. | 
+| /help       |               | Show this help message.                                                                                                                |
+
+*Note*: Command arguments must be separated by a space. For multi-word arguments, use quotes. For example: /topic "This is a topic".""",
                     username="etabeta",
                     timestamp=time.time_ns() // 1_000_000,
                     private_message=[command.commander],

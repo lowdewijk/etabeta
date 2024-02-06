@@ -8,6 +8,7 @@ import {
 import {useLoggedInAuth} from 'src/auth/AuthProvider';
 import {DisplayTime} from 'src/components/DisplayTime/DisplayTime';
 import {ErrorContainer} from 'src/components/Error/ErrorContainer';
+import {RenderMessage} from './RenderMessage';
 
 export type ChatDisplayProps = {
   sessionID: string;
@@ -70,7 +71,8 @@ export const ChatDisplay: FC<ChatDisplayProps> = ({sessionID}) => {
             }}
           >
             <Box sx={{}}>
-              <b>{message.username}</b>: {message.message}
+              <b>{message.username}</b>:{' '}
+              <RenderMessage message={message.message} />
               {(etabetaState?.under_observation ?? []).includes(
                 message.timestamp,
               ) ? (
