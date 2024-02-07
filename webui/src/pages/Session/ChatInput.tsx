@@ -2,9 +2,9 @@ import {FC, useState} from 'react';
 import {Navigate} from 'react-router-dom';
 import {Button, TextField} from '@mui/material';
 
-import {useSendMessage} from 'src/api_client/session_queries';
-import {useAuth} from 'src/auth/AuthProvider';
-import {ROUTE_LOGIN} from 'src/routes/Routes';
+import {useSendMessage} from '../../api_client/session_queries';
+import {useAuth} from '../../auth/AuthProvider';
+import {ROUTE_LOGIN} from '../../routes/Routes';
 
 export type ChatInputProps = {
   sessionID: string;

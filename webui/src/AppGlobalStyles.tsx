@@ -1,4 +1,4 @@
-import GlobalStyles from '@mui/material/GlobalStyles';
+import {GlobalStyles} from '@mui/material';
 
 const AppGlobalStyles = (): JSX.Element => {
   return (

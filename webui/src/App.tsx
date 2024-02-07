@@ -4,9 +4,9 @@ import {HashRouter} from 'react-router-dom';
 import {ToastContainer} from 'react-toastify';
 import {createTheme, ThemeProvider} from '@mui/material/styles';
 
-import AppGlobalStyles from 'src/AppGlobalStyles';
 import {AuthProvider} from './auth/AuthProvider';
 import {AppRoutes} from './routes/AppRoutes';
+import AppGlobalStyles from './AppGlobalStyles';
 
 import 'react-toastify/dist/ReactToastify.css';
 

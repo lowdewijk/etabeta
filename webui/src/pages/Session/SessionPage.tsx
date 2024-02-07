@@ -2,8 +2,8 @@ import {FC} from 'react';
 import {Link} from 'react-router-dom';
 import {Box} from '@mui/material';
 
-import {MenuAppBar} from 'src/components/MenuAppBar/MenuAppBar';
-import {ROUTE_SESSIONS} from 'src/routes/Routes';
+import {MenuAppBar} from '../../components/MenuAppBar/MenuAppBar';
+import {ROUTE_SESSIONS} from '../../routes/Routes';
 import {ChatDisplay} from './ChatDisplay';
 import {ChatInput} from './ChatInput';
 import {EtaBetaFeedback} from './EtaBetaFeedback';

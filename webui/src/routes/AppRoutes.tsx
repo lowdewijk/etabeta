@@ -1,7 +1,7 @@
 import {FC} from 'react';
 import {Route, Routes} from 'react-router-dom';
 
-import Login from 'src/pages/Login/Login';
+import Login from '../pages/Login/Login';
 import {SessionsPage} from '../pages/Sessions/SessionsPage';
 import {PrivateRoute} from './PrivateRoute';
 import {ROUTE_LOGIN, ROUTE_SESSION, ROUTE_SESSIONS} from './Routes';

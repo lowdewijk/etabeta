@@ -1,8 +1,8 @@
 import {FC} from 'react';
 import {Box, List, ListItem} from '@mui/material';
 
-import {EtaBetaArgument, EtaBetaState} from 'src/api_client/session';
-import {DisplayTime} from 'src/components/DisplayTime/DisplayTime';
+import {EtaBetaArgument, EtaBetaState} from '../../api_client/session';
+import {DisplayTime} from '../../components/DisplayTime/DisplayTime';
 
 type EtaBetaStateDisplayProps = {
   state: EtaBetaState;

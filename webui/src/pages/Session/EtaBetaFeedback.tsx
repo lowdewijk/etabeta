@@ -1,8 +1,8 @@
 import {FC} from 'react';
 import {Box, CircularProgress} from '@mui/material';
 
-import {useGetEtaBetaState} from 'src/api_client/session_queries';
-import {ErrorContainer} from 'src/components/Error/ErrorContainer';
+import {useGetEtaBetaState} from '../../api_client/session_queries';
+import {ErrorContainer} from '../../components/Error/ErrorContainer';
 import {EtaBetaStateDisplay} from './EtaBetaStateDisplay';
 
 export type EtaBetaFeedbackProps = {

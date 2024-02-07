@@ -4,10 +4,10 @@ import {Box, CircularProgress} from '@mui/material';
 import {
   useGetEtaBetaState,
   useReadMessages,
-} from 'src/api_client/session_queries';
-import {useLoggedInAuth} from 'src/auth/AuthProvider';
-import {DisplayTime} from 'src/components/DisplayTime/DisplayTime';
-import {ErrorContainer} from 'src/components/Error/ErrorContainer';
+} from '../../api_client/session_queries';
+import {useLoggedInAuth} from '../../auth/AuthProvider';
+import {DisplayTime} from '../../components/DisplayTime/DisplayTime';
+import {ErrorContainer} from '../../components/Error/ErrorContainer';
 import {RenderMessage} from './RenderMessage';
 
 export type ChatDisplayProps = {

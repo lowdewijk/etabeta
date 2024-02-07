@@ -1,15 +1,15 @@
 import {useState} from 'react';
 import {Link} from 'react-router-dom';
-import DeleteIcon from '@mui/icons-material/Delete';
+import {Delete} from '@mui/icons-material';
 import {Button, CircularProgress, TextField} from '@mui/material';
 
 import {
   useCreateSession,
   useDeleteSession,
   useListSessions,
-} from 'src/api_client/sessions_queries';
-import {ErrorContainer} from 'src/components/Error/ErrorContainer';
-import {MenuPage} from 'src/components/MenuPage/MenuPage';
+} from '../../api_client/sessions_queries';
+import {ErrorContainer} from '../../components/Error/ErrorContainer';
+import {MenuPage} from '../../components/MenuPage/MenuPage';
 
 export const SessionsPage = () => {
   const {data: sessions, isError, isLoading} = useListSessions();
@@ -60,7 +60,7 @@ export const SessionsPage = () => {
                 </span>
                 <span>
                   <Button onClick={() => onSessionDelete(session.id)}>
-                    <DeleteIcon />
+                    <Delete />
                   </Button>
                 </span>
               </li>

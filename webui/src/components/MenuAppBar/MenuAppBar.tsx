@@ -1,16 +1,18 @@
 import * as React from 'react';
 import {FC, ReactNode} from 'react';
 import {useNavigate} from 'react-router-dom';
-import AccountCircle from '@mui/icons-material/AccountCircle';
-import AppBar from '@mui/material/AppBar';
-import IconButton from '@mui/material/IconButton';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
+import {AccountCircle} from '@mui/icons-material';
+import {
+  AppBar,
+  IconButton,
+  Menu,
+  MenuItem,
+  Toolbar,
+  Typography,
+} from '@mui/material';
 
-import {useLoggedInAuth} from 'src/auth/AuthProvider';
-import {ROUTE_SESSIONS} from 'src/routes/Routes';
+import {useLoggedInAuth} from '../../auth/AuthProvider';
+import {ROUTE_SESSIONS} from '../../routes/Routes';
 
 export type MenuAppBarProps = {
   parentPage?: ReactNode;

@@ -5,7 +5,7 @@ import {
   createSession as clientCreateSession,
   deleteSession as clientDeleteSession,
   listSessions,
-} from 'src/api_client/sessions';
+} from '../api_client/sessions';
 
 export const useListSessions = () => {
   return useQuery('sessions', () => listSessions());

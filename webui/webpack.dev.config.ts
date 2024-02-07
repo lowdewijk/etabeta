@@ -1,9 +1,9 @@
 import { Configuration as WebpackConfiguration } from "webpack";
 import { Configuration as WebpackDevServerConfiguration } from "webpack-dev-server";
-import merge from "webpack-merge";
+import {merge} from "webpack-merge";
 
-import {outDir} from './build-constants';
-import commonConfig from './webpack.common.config';
+import {outDir} from './build-constants.js';
+import commonConfig from './webpack.common.config.js';
 
 interface Configuration extends WebpackConfiguration {
   devServer?: WebpackDevServerConfiguration;

@@ -114,7 +114,8 @@
           webui = pkgs.buildNpmPackage {
             name = "etabeta-webui";
             src = ./webui;
-            npmDepsHash = "sha256-8kTCAY8gUfQR7rvaU1qJghGUf5+lRBrFolznJ3FWHMs=";
+            # npmDepsHash = pkgs.lib.fakeHash; # use this to get a new hash
+            npmDepsHash = "sha256-5yOZdRmtTnPiE4Yrx/iuk8sLihtcCY9821Al13G/WKU="; 
             installPhase = ''
               echo Copy dist to lib/node_modules/etabeta
               mkdir -p $out/lib/node_modules/etabeta

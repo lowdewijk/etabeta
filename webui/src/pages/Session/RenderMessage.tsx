@@ -1,6 +1,7 @@
 import {createElement, FC, Fragment, useEffect, useState} from 'react';
 import * as prod from 'react/jsx-runtime';
 import rehypeReact, {Options} from 'rehype-react';
+import remarkGfm from 'remark-gfm';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
 import {unified} from 'unified';
@@ -33,6 +34,7 @@ const useMarkdown = (text: string) => {
     const x = (async function () {
       const file = await unified()
         .use(remarkParse)
+        .use(remarkGfm)
         .use(remarkRehype)
         .use(rehypeReact, production)
         .process(text);

@@ -8,9 +8,10 @@
     "esModuleInterop": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "module": "commonjs",
+    "module": "ES2022",
     "moduleResolution": "node",
-    "resolveJsonModule": true,
+//    "moduleResolution": "",
+    //"resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
@@ -30,6 +31,6 @@
     "noImplicitOverride": true,                  /* Ensure overriding members in derived classes are marked with an 'override' modifier. */
     "noPropertyAccessFromIndexSignature": true,  /* Require undeclared properties from index signatures to use element accesses. */
   },
-  "include": ["src",  "./jest.setup.ts"],
+  "include": ["src",  "./jest.setup.ts", "./webpack.prod.config.ts"],
   "types": ["node", "jest", "@testing-library/jest-dom"],
 }

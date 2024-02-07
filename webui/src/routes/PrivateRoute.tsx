@@ -1,6 +1,6 @@
 import {Navigate, Outlet} from 'react-router-dom';
 
-import {useAuth} from 'src/auth/AuthProvider';
+import {useAuth} from '../auth/AuthProvider';
 
 export const PrivateRoute = () => {
   const {isLoggedIn} = useAuth();

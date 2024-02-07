@@ -6,7 +6,7 @@ import {
   readMessages,
   SendMessage,
   sendMessage,
-} from 'src/api_client/session';
+} from '../api_client/session';
 import {UserError} from './user_error';
 
 export const useSendMessage = (sessionID: string) => {

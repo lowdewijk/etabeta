@@ -1,9 +1,9 @@
 import webpack from "webpack";
-import merge from "webpack-merge";
+import {merge} from "webpack-merge";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
 
-import {outDir} from './build-constants';
-import commonConfig from './webpack.common.config';
+import {outDir} from './build-constants.js';
+import commonConfig from './webpack.common.config.js';
 
 const prodSpecificConfig: webpack.Configuration = {
   mode: "production",
