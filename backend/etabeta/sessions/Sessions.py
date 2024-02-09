@@ -2,7 +2,7 @@ import logging
 import os
 import os.path as path
 import pickle
-from etabeta.session.session import Session
+from etabeta.session.Session import Session
 
 
 log = logging.getLogger(__name__)

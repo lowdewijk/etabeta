@@ -1,9 +1,10 @@
 import logging
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from fastapi import APIRouter, HTTPException
-from etabeta.session.AIUser import AIUser
+from etabeta.common.AIUser import AIUser
 from etabeta.common.Message import Message, Username
-from etabeta.session.session import SessionState
+from etabeta.common.User import User
+from etabeta.session.Session import SessionState
 from etabeta.common.UserError import UserError
 from etabeta.common.chat_data import sessions
 
@@ -15,6 +16,39 @@ import shlex
 router = APIRouter()
 log = logging.getLogger(__name__)
 
+def get_session_or_raise(session_id):
+    session = sessions.get_session(session_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found")
+    return session
+
+@router.get("/session/{session_id}/join/{username}")
+def join_session(session_id: str, username: Username) -> None:
+    session = get_session_or_raise(session_id)
+    session.add_user(User(username))
+    sessions.save()
+
+@router.get("/session/{session_id}/leave/{username}")
+def leave_session(session_id: str, username: Username) -> None:
+    session = get_session_or_raise(session_id)
+    session.remove_user(username)
+    sessions.save()
+
+class SessionUser(BaseModel):
+    username: str
+    last_active: int
+
+class ActiveUsers(BaseModel):
+    users: list[SessionUser]
+    ais: list[str]
+
+@router.get("/session/{session_id}/active_users")
+def get_active_users(session_id: str) -> ActiveUsers:
+    session = get_session_or_raise(session_id)
+    return ActiveUsers(
+        users=[SessionUser(username=user.user.name, last_active=user.last_active) for user in session.get_active_users()],
+        ais=[ai.name for ai in session.get_ais()]
+    )
 
 class ReadMessage(BaseModel):
     message: str
@@ -26,9 +60,8 @@ class ReadMessage(BaseModel):
 
 @router.get("/session/{session_id}/messages/{username}")
 def read_messages(session_id: str, username: Username):
-    session = sessions.get_session(session_id)
-    if session is None:
-        raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found")
+    session = get_session_or_raise(session_id)
+    session.update_user_last_active(username)
     messages = [
         ReadMessage(
             message=msg.message,
@@ -43,9 +76,7 @@ def read_messages(session_id: str, username: Username):
 
 @router.get("/session/{session_id}/etabeta_messages")
 def read_etabeta_messages(session_id: str):
-    session = sessions.get_session(session_id)
-    if session is None:
-        raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found")
+    session = get_session_or_raise(session_id)
     return session.get_etabeta_state()
 
 
@@ -59,9 +90,7 @@ async def send_message(session_id: str, message: SendMessage):
     if len(message.message) == 0:
         return
 
-    session = sessions.get_session(session_id)
-    if session is None:
-        raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found")
+    session = get_session_or_raise(session_id)
 
     command = command_parse(message)
     if command is not None:
@@ -93,7 +122,7 @@ async def send_message(session_id: str, message: SendMessage):
                     command.commander,
                     f"Invalid number of arguments for command /ai. Expected 2, but got {len(command.args)}.",
                 )
-            session.add_ai_user(
+            session.add_ai(
                 command.commander, AIUser(command.args[0], command.args[1])
             )
             sessions.save()

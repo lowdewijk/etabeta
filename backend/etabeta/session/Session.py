@@ -4,9 +4,12 @@ from enum import Enum
 import time
 
 from typing import Optional, List
-from etabeta.session.AIUser import AIUser
+from etabeta.common.Clock import Timestamp, clock
+from etabeta.common.User import User
+from etabeta.common.AIUser import AIUser
 from etabeta.session.EtaBeta import ETABETA_USERNAME, EtaBeta
-from etabeta.common.Message import Message, Username
+from etabeta.common.Message import Message
+from etabeta.common.Username import Username
 
 from etabeta.common.UserError import UserError
 
@@ -23,48 +26,46 @@ class StateChange:
     prev_state: SessionState
     next_state: SessionState
 
-
 @dataclass
-class HumanUser:
-    name: str
-
-
-User = HumanUser | AIUser
-
+class SessionUser:
+    user: User
+    last_active: Timestamp
 
 class Session:
-    session_id: str
-    messages: List[Message] = []
-    topic: Optional[str] = None
-    etabeta: EtaBeta
-    state: SessionState
-    state_history: List[StateChange]
-    active_users: List[User] = []
+    _session_id: str
+    _messages: List[Message]
+    _topic: Optional[str]
+    _etabeta: EtaBeta
+    _state: SessionState
+    _state_history: List[StateChange]
+    _ais: List[AIUser]
+    _active_users: dict[Username, SessionUser]
 
     def __init__(self, session_id: str):
-        self.session_id = session_id
-        self.etabeta = EtaBeta()
-        self.messages = []
-        self.state = SessionState.LOBBY
-        self.state_history = []
-        self.active_users = []
+        self._session_id = session_id
+        self._etabeta = EtaBeta()
+        self._messages = []
+        self._state = SessionState.LOBBY
+        self._state_history = []
+        self._ais = []
+        self._active_users = {}
 
     def add_message(self, message: Message):
-        self.messages.append(message)
+        self._messages.append(message)
 
     def get_messages(self, username: Username) -> list[Message]:
         return [
             msg
-            for msg in self.messages
+            for msg in self._messages
             if msg.private_message is None or username in msg.private_message
         ]
 
     def get_session_id(self):
-        return self.session_id
+        return self._session_id
 
     async def query_ais(self):
         debate_messages = self.get_debate_messages()
-        topic = self.topic
+        topic = self._topic
         if topic == None or len(debate_messages) == 0:
             return
 
@@ -72,7 +73,7 @@ class Session:
             ai_user: AIUser, debate_messages: list[Message]
         ) -> None:
             message = await ai_user.query(topic, debate_messages)
-            self.messages.append(
+            self._messages.append(
                 Message(
                     message=message,
                     username=ai_user.name,
@@ -80,22 +81,21 @@ class Session:
                 )
             )
 
-        ai_users = self.get_ai_users()
-        awaits = [self.etabeta.query(topic, debate_messages)] + [
-            get_ai_message(ai_user, debate_messages) for ai_user in ai_users
+        awaits = [self._etabeta.query(topic, debate_messages)] + [
+            get_ai_message(ai_user, debate_messages) for ai_user in self._ais
         ]
         await asyncio.gather(*awaits)
 
         # run again to check the message of the AI users
-        if len(ai_users) > 0:
-            await self.etabeta.query(self.get_topic(), self.get_debate_messages())
+        if len(self._ais) > 0:
+            await self._etabeta.query(self.get_topic(), self.get_debate_messages())
 
     def get_etabeta_state(self):
-        return self.etabeta
+        return self._etabeta
 
     def set_topic(self, commander: str, topic: str):
-        self.topic = topic
-        self.messages.append(
+        self._topic = topic
+        self._messages.append(
             Message(
                 message=f"Topic set to '{topic}' by {commander}",
                 username="Eta Beta",
@@ -104,13 +104,13 @@ class Session:
         )
 
     def get_topic(self):
-        return self.topic
+        return self._topic
 
     def set_state(self, commander: str, state: SessionState):
-        if self.state != SessionState.DEBATING and state == SessionState.DEBATING:
-            if self.topic is None:
+        if self._state != SessionState.DEBATING and state == SessionState.DEBATING:
+            if self._topic is None:
                 raise UserError(commander, "Topic must be set before starting debate.")
-            self.messages.append(
+            self._messages.append(
                 Message(
                     message=f"Debate has started!",
                     username="Eta Beta",
@@ -118,17 +118,17 @@ class Session:
                 )
             )
 
-        self.state_history.append(
+        self._state_history.append(
             StateChange(
                 timestamp=time.time_ns() // 1_000_000,
-                prev_state=self.state,
+                prev_state=self._state,
                 next_state=state,
             )
         )
-        self.state = state
+        self._state = state
 
     def get_state(self):
-        return self.state
+        return self._state
 
     def get_debate_times(self):
         """
@@ -137,7 +137,7 @@ class Session:
         """
         debate_times = []
         start_debate = None
-        for state in self.state_history:
+        for state in self._state_history:
             if state.next_state == SessionState.DEBATING:
                 start_debate = state.timestamp
             if state.prev_state == SessionState.DEBATING:
@@ -151,7 +151,7 @@ class Session:
         debate_times = self.get_debate_times()
         debate_messasges = [
             message
-            for message in self.messages
+            for message in self._messages
             if message.timestamp >= debate_times[0][0]
             and (debate_times[0][1] is None or message.timestamp <= debate_times[0][1])
             and message.username != ETABETA_USERNAME
@@ -159,12 +159,12 @@ class Session:
         ]
         return debate_messasges
 
-    def get_active_users(self):
-        return self.active_users
+    def get_ais(self):
+        return self._ais
 
-    def add_ai_user(self, commander: str, ai_user: AIUser):
-        self.active_users.append(ai_user)
-        self.messages.append(
+    def add_ai(self, commander: str, ai_user: AIUser):
+        self._ais.append(ai_user)
+        self._messages.append(
             Message(
                 message=f"AI user '{ai_user.name}' added by {commander}.",
                 username="Eta Beta",
@@ -172,5 +172,18 @@ class Session:
             )
         )
 
-    def get_ai_users(self) -> list[AIUser]:
-        return [user for user in self.active_users if isinstance(user, AIUser)]
+    def add_user(self, user: User):
+        self._active_users[user.name] = SessionUser(user, clock.get_timestamp())
+    
+    def update_user_last_active(self, user: User, timestamp = clock.get_timestamp()):
+        if user.name in self._active_users:
+            self._active_users[user.name].last_active = timestamp
+
+    def remove_user(self, username: Username) -> bool:
+        user_exists = username in self._active_users
+        if user_exists:
+            del self._active_users[username]
+        return user_exists
+
+    def get_active_users(self) -> list[SessionUser]:
+        return list(self._active_users.values())

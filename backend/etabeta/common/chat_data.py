@@ -1,5 +1,5 @@
 import logging
-from etabeta.sessions.sessions import Sessions
+from etabeta.sessions.Sessions import Sessions
 import os
 
 log = logging.getLogger(__name__)

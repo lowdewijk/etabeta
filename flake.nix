@@ -29,6 +29,7 @@
           flake8
           flake8-bugbear
           types-pyyaml
+          pytest          
         ]);
         otherBackendDeps = pkgs: (with pkgs; [
           python311Full

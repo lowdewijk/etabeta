@@ -1,7 +1,5 @@
+from etabeta.common.Username import Username
 from pydantic import BaseModel
-from typing import NewType
-
-Username = NewType("Username", str)
 
 
 class Message(BaseModel):

@@ -1,7 +1,7 @@
 import logging
 from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException
-from etabeta.session.session import Session
+from etabeta.session.Session import Session
 from etabeta.common.chat_data import sessions
 
 router: APIRouter = APIRouter()
