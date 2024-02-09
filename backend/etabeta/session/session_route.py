@@ -61,7 +61,10 @@ class ReadMessage(BaseModel):
 @router.get("/session/{session_id}/messages/{username}")
 def read_messages(session_id: str, username: Username):
     session = get_session_or_raise(session_id)
+    
     session.update_user_last_active(username)
+    session.remove_inactive_users()
+    
     messages = [
         ReadMessage(
             message=msg.message,

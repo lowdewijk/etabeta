@@ -4,6 +4,7 @@ from enum import Enum
 import time
 
 from typing import Optional, List
+from etabeta.common.Config import config
 from etabeta.common.Clock import Timestamp, clock
 from etabeta.common.User import User
 from etabeta.common.AIUser import AIUser
@@ -175,9 +176,9 @@ class Session:
     def add_user(self, user: User):
         self._active_users[user.name] = SessionUser(user, clock.get_timestamp())
     
-    def update_user_last_active(self, user: User, timestamp = clock.get_timestamp()):
-        if user.name in self._active_users:
-            self._active_users[user.name].last_active = timestamp
+    def update_user_last_active(self, username: Username) -> None:
+        if username in self._active_users:
+            self._active_users[username].last_active = clock.get_timestamp()
 
     def remove_user(self, username: Username) -> bool:
         user_exists = username in self._active_users
@@ -187,3 +188,10 @@ class Session:
 
     def get_active_users(self) -> list[SessionUser]:
         return list(self._active_users.values())
+    
+    def remove_inactive_users(self) -> None:
+        current_time = clock.get_timestamp()
+        inactive_users = [su.user.name for su in self._active_users.values() 
+                        if current_time - su.last_active > config.prune_session_user_timeout]
+        for user in inactive_users:
+            del self._active_users[user]
