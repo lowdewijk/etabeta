@@ -29,6 +29,14 @@ export type EtaBetaState = {
   under_observation: Array<number>;
 };
 
+export const joinSession = async (sessionID: string, username: string) => {
+  return axios.post(`/api/session/${sessionID}/join/${username}`);
+};
+
+export const leaveSession = async (sessionID: string, username: string) => {
+  return axios.post(`/api/session/${sessionID}/leave/${username}`);
+};
+
 export const sendMessage = async (sessionID: string, message: SendMessage) => {
   return axios.post(`/api/session/${sessionID}/send_message`, message);
 };

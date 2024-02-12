@@ -22,13 +22,13 @@ def get_session_or_raise(session_id):
         raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found")
     return session
 
-@router.get("/session/{session_id}/join/{username}")
+@router.post("/session/{session_id}/join/{username}")
 def join_session(session_id: str, username: Username) -> None:
     session = get_session_or_raise(session_id)
     session.add_user(User(username))
     sessions.save()
 
-@router.get("/session/{session_id}/leave/{username}")
+@router.post("/session/{session_id}/leave/{username}")
 def leave_session(session_id: str, username: Username) -> None:
     session = get_session_or_raise(session_id)
     session.remove_user(username)
@@ -130,26 +130,27 @@ async def send_message(session_id: str, message: SendMessage):
             )
             sessions.save()
             return
+    
+        if command.cmd == "users":
+            user_list = "\n * ".join([user.user.name for user in session.get_active_users()])
+            ai_list = "\n * ".join([ai.name for ai in session.get_ais()])
+            session.add_etabeta_message(f"Users:\n\n{user_list}\n\nAIs:\n\n{ai_list}", [command.commander])
+            sessions.save()
+            return
 
         if command.cmd == "help":
-            session.add_message(
-                Message(
-                    message="""
+            session.add_etabeta_message("""
 | Command     | Arguments     | Description                                                                                                                            |
 | ----------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| /users      |               | List the users in the session.                                                                                                            |
 | /topic      | $topic        | Set the topic of the debate to $topic.                                                                                                 |
 | /start      |               | Start the debate. The topic must first be set, see /topic.                                                                             |
 | /pause      |               | Pause the debate.                                                                                                                      |
-| /ai         | $name $prompt | Add an AI user to the room with the given name and prompt. You can use the prompt to tell the AI what to think about the debate topic. | 
+| /ai         | $name $prompt | Add an AI user to the session with the given name and prompt. You can use the prompt to tell the AI what to think about the debate topic. | 
 | /help       |               | Show this help message.                                                                                                                |
 
 *Note*: Command arguments must be separated by a space. For multi-word arguments, use quotes. For example: /topic "This is a topic".
-""",
-                    username="etabeta",
-                    timestamp=time.time_ns() // 1_000_000,
-                    private_message=[command.commander],
-                )
-            )
+""", [command.commander])
             sessions.save()
             return
 

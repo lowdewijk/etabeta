@@ -53,6 +53,16 @@ class Session:
 
     def add_message(self, message: Message):
         self._messages.append(message)
+    
+    def add_etabeta_message(self, message: str, private_message: list[Username] = None):
+        self._messages.append(
+            Message(
+                message=message,
+                username=ETABETA_USERNAME,
+                timestamp=time.time_ns() // 1_000_000,
+                private_message=private_message
+            )
+        )
 
     def get_messages(self, username: Username) -> list[Message]:
         return [
@@ -96,13 +106,7 @@ class Session:
 
     def set_topic(self, commander: str, topic: str):
         self._topic = topic
-        self._messages.append(
-            Message(
-                message=f"Topic set to '{topic}' by {commander}",
-                username="Eta Beta",
-                timestamp=time.time_ns() // 1_000_000,
-            )
-        )
+        self.add_etabeta_message(f"Topic set to '{topic}' by @{commander}")
 
     def get_topic(self):
         return self._topic
@@ -111,13 +115,7 @@ class Session:
         if self._state != SessionState.DEBATING and state == SessionState.DEBATING:
             if self._topic is None:
                 raise UserError(commander, "Topic must be set before starting debate.")
-            self._messages.append(
-                Message(
-                    message=f"Debate has started!",
-                    username="Eta Beta",
-                    timestamp=time.time_ns() // 1_000_000,
-                )
-            )
+            self.add_etabeta_message(f"Debate started by @{commander}.")
 
         self._state_history.append(
             StateChange(
@@ -165,16 +163,11 @@ class Session:
 
     def add_ai(self, commander: str, ai_user: AIUser):
         self._ais.append(ai_user)
-        self._messages.append(
-            Message(
-                message=f"AI user '{ai_user.name}' added by {commander}.",
-                username="Eta Beta",
-                timestamp=time.time_ns() // 1_000_000,
-            )
-        )
+        self.add_etabeta_message(f"AI user @{ai_user.name} added by @{commander}.")
 
     def add_user(self, user: User):
         self._active_users[user.name] = SessionUser(user, clock.get_timestamp())
+        self.add_etabeta_message(f"@{user.name} joined.")
     
     def update_user_last_active(self, username: Username) -> None:
         if username in self._active_users:
@@ -184,6 +177,7 @@ class Session:
         user_exists = username in self._active_users
         if user_exists:
             del self._active_users[username]
+            self.add_etabeta_message(f"@{username} left.")
         return user_exists
 
     def get_active_users(self) -> list[SessionUser]:
@@ -194,4 +188,4 @@ class Session:
         inactive_users = [su.user.name for su in self._active_users.values() 
                         if current_time - su.last_active > config.prune_session_user_timeout]
         for user in inactive_users:
-            del self._active_users[user]
+            self.remove_user(user)
