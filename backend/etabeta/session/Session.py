@@ -27,10 +27,12 @@ class StateChange:
     prev_state: SessionState
     next_state: SessionState
 
+
 @dataclass
 class SessionUser:
     user: User
     last_active: Timestamp
+
 
 class Session:
     _session_id: str
@@ -53,14 +55,16 @@ class Session:
 
     def add_message(self, message: Message):
         self._messages.append(message)
-    
-    def add_etabeta_message(self, message: str, private_message: list[Username] = None):
+
+    def add_etabeta_message(
+        self, message: str, private_message: list[Username] | None = None
+    ):
         self._messages.append(
             Message(
                 message=message,
                 username=ETABETA_USERNAME,
                 timestamp=time.time_ns() // 1_000_000,
-                private_message=private_message
+                private_message=private_message,
             )
         )
 
@@ -168,7 +172,7 @@ class Session:
     def add_user(self, user: User):
         self._active_users[user.name] = SessionUser(user, clock.get_timestamp())
         self.add_etabeta_message(f"@{user.name} joined.")
-    
+
     def update_user_last_active(self, username: Username) -> None:
         if username in self._active_users:
             self._active_users[username].last_active = clock.get_timestamp()
@@ -182,10 +186,13 @@ class Session:
 
     def get_active_users(self) -> list[SessionUser]:
         return list(self._active_users.values())
-    
+
     def remove_inactive_users(self) -> None:
         current_time = clock.get_timestamp()
-        inactive_users = [su.user.name for su in self._active_users.values() 
-                        if current_time - su.last_active > config.prune_session_user_timeout]
+        inactive_users = [
+            su.user.name
+            for su in self._active_users.values()
+            if current_time - su.last_active > config.prune_session_user_timeout
+        ]
         for user in inactive_users:
             self.remove_user(user)
